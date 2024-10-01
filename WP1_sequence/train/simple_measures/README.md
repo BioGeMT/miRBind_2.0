@@ -1,5 +1,3 @@
-# miRNA-Target Binding Predictor
-
 ## Overview
 
 This project implements two machine learning approaches, **Logistic Regression** and **Random Forest**, to predict miRNA-target binding interactions. Both models utilize k-mer reverse complement features derived from miRNA and target gene sequences, providing a comprehensive framework for identifying potential miRNA-target pairs.
