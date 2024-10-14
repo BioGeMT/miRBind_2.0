@@ -1,0 +1,1 @@
+# this script will download the datasets and organize them in the data folder

@@ -4,31 +4,32 @@ Repository for ML tools for miRNA binding site prediction.
 
 ### Structure of the repository:
 
-Basic division of the model workflows based on the data input.
-- `WP1_sequence/`: Work Package 1 is using just a sequence of the miRNA and the target mRNA
-- `WP2_conservation/`: Work Package 2 is using the sequences together with a conservation score of the mRNA
+- `code` - Folder with plain scripts, that can work on their own and are reusable. Example of such a script is *specific encoder for the miRNA:mRNA sequences*; or a *random Forest training script*.
+- `analysis` - Folder with directory per each specific analysis, eg. *training of Random Forest on K mer encoding of Manakov 1:1 dataset*. Each of this specific analysis will contain one master script, that will reproduce the whole analysis that was performed. 
+You can also use your analysis folder as a playground (eg. for hyperparameter optimization or trying different architectures), but the master script should run just the final analysis.
+Store here intermediate results too, when running the analysis (like encoded datasets or prediction files), but please don't commit them.
+All the scripts in this folder should not be code-heavy, they should use code chunks already available in the `code` directory. 
+Use custom code pieces only for parts that are very specific fo your analysis and not reusable. 
+- `data` - Placeholder empty folder, that locally contains all the datasets used for model trainings etc.
+Here on GitHub it contains just a script that when executed will download the datasets and put them in a proper folder structure.
+- `models` - Placeholder empty folder, similar to the `data` folder. Contains a script that downloads the trained models.
 
-The Work Packages than have the following structure:
-
-- `WP1_sequence/`:
-    - `encode/`: Contains the scripts for encoding the sequences into inner presentation and readme with description of the encoding technique
-    - `train/model_name/`: Contains the scripts for training the model, definition of the model architecture and readme about the model. Replace `model_name` with the name of the model, each model has it's own folder.
-    - `evaluate/`: Contains the scripts for evaluating the model, producing scores for each miRNA:target pair
-    - `workflow/model_name`: Contains a bash script / snakemake / something else for running the whole workflow for each model, from encoding the sequences to evaluating the model. Also includes readme with short explanation
 
 ### How to work:
 
-Create your own branch and do there whatever you want. Typically, you will be probably training a new model with some specific architecture, but you might also just add a new encoder.
+Create a new branch, work there, and when you are ready, clean it up and create a pull request to the main branch.
 
-When you feel ready, review what you did and be sure to have the following things ready: 
+##### Scenario 1: adding shared utility
+If you want to add a new utility (like data encoder, model architecture, evaluation script) that can be used by others, put it in the `code` folder.
+Make it ideally a plain python script, that can be run on its own and is reusable.
 
-You might have used encoder that is already in the main branch or you might have created a new one.
-If you created a new one, it should take as an input a .tsv dataset file and output the encoded dataset (eg. in `.npy` format).
+##### Scenario 2: creating a new analysis
+You might already have all the chunks you need coded and you want to just unite them into a single analysis. Or you might want to experiment a bit.
+Then create a folder in the `analysis` folder with a descriptive name of the analysis you are doing. 
+You can try there for example different hyperparameter settings or different training dataset ratios. But at the end, you should have a master script that will run the final pipeline with specific settings and produce one consistent result.
 
-For the model training, create a separate folder in the `train` folder with a clean python file that takes the encoded dataset as an input and outputs the trained model. If you feel like, you can also put the model architecture into a separate file and import it in the training script. Create also a readme with a brief description of the model.
+#### Scenario 3: changing shared utility / dataset / model
+It might happen that you eg. find a bug or want to make faster some of the shared code pieces in the `code` folder. 
+Then change the code, but also make sure to find all its usages in the `analysis` folder and update them accordingly / rerun the analysis / put there a flag (maybe an issue) so people know that their results might be outdated.
 
-For each model created, there should be a compatible evaluation script that takes the trained model and the test dataset as an input and output the scores for each miRNA:target pair.
-
-Finally, create a workflow script that takes the train and test dataset as an input and runs the whole workflow from encoding the sequences to evaluating the model. Create a separate folder in the `workflow` folder with the script and a readme.
-
-When you are done with the cleanup, create a pull request to the main branch and let others review your code.
+The same thing applies when there is an update in a **dataset** or to a **model**.
