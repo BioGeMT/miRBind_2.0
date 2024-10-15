@@ -9,3 +9,9 @@ Encodes miRNA and gene sequences into 2D-binding matrix.
 
 Outputs npy file with encoded matrices and npy file with corresponding labels.
 
+#### Usage
+Run the script from the command line with the following syntax:
+
+
+```python binding_2d_matrix_encoder.py --i_file input_dataset_file.tsv --o_prefix output_prefix```
+
