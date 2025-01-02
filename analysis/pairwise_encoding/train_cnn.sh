@@ -1,4 +1,1 @@
-# master script that runs some analysis
-# it will use some scripts available in the code directory and might use as input data from the data directory or models directory
-# output results will appear in the sample_analysis directory
-
+python cnn_16_encoding.py --train_file "miRBind_2.0/data/chimeric_datasets/Manakov2022_flat/AGO2_eCLIP_Manakov2022_train.tsv" --test_file_1 "miRBind_2.0/data/chimeric_datasets/Manakov2022_flat/AGO2_eCLIP_Manakov2022_test.tsv" --test_file_2 "miRBind_2.0/data/chimeric_datasets/Manakov2022_flat/AGO2_eCLIP_Manakov2022_leftout.tsv" --batch_size 32 --num_epochs 30 --embedding_dim 1 --train_fraction 1
