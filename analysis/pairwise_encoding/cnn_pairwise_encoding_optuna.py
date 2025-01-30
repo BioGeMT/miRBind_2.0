@@ -119,10 +119,11 @@ def evaluate(model, val_loader, device):
 
 def objective(trial, train_dataset, device, args):
     # Suggest hyperparameters
-    batch_size = trial.suggest_int('batch_size', 16, 128)
-    embedding_dim = trial.suggest_int('embedding_dim', 2, 16)
+    batch_size = trial.suggest_int('batch_size', 32, 64)
+    # embedding_dim = trial.suggest_int('embedding_dim', 2, 16)
+    embedding_dim = trial.suggest_categorical('embedding_dim', [2,4,8,16])
     learning_rate = trial.suggest_float('learning_rate', 1e-5, 1e-2, log=True)
-    dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
+    dropout_rate = trial.suggest_float('dropout_rate', 0.2, 0.3)
     
     # Create train/val split
     train_data, val_data = MiRNADataset.create_train_validation_split(
