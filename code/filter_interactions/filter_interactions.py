@@ -8,8 +8,8 @@ def define_interaction_groups(df):
     # Canonical seed: Seed6mer is 1 AND Seed6merBulgeOrMismatch is 0
     df["CanonicalSeed"] = ((df["Seed6mer"] == 1) & (df["Seed6merBulgeOrMismatch"] == 0)).astype(int)
 
-    # Non-canonical seed: Seed6merBulgeOrMismatch is 1
-    df["NonCanonicalSeed"] = (df["Seed6merBulgeOrMismatch"] == 1).astype(int)
+    # Non-canonical seed: Seed6mer is 0 AND Seed6merBulgeOrMismatch is 1
+    df["NonCanonicalSeed"] = ((df["Seed6mer"] == 0) & (df["Seed6merBulgeOrMismatch"] == 1)).astype(int)
     
     # No seed: If all seed types are 0
     df["NoSeed"] = (~df[all_seeds].any(axis=1)).astype(int)
