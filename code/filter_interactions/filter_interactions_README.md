@@ -35,7 +35,7 @@ python filter_interactions.py --ifile <input_file_with_seed_types> --odir <outpu
 
 For each input dataset, the script generates:
 
-- `<input_file_basename>_canonical.tsv` → Filtered file with only canonical (6mer) seed interactions. 
-- `<input_file_basename>_noncanonical.tsv` → Filtered file with only non-canonical (6merBulgeOrMismatch) seed interactions. 
+- `<input_file_basename>_canonical.tsv` → Filtered file with only canonical seed interactions. 
+- `<input_file_basename>_noncanonical.tsv` → Filtered file with only non-canonical seed interactions. 
 - `<input_file_basename>_noseed.tsv` → Filtered file with only non-seed interactions.
 
