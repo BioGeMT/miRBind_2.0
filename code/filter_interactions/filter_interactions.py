@@ -3,16 +3,15 @@ import argparse
 import os
 
 def define_interaction_groups(df):
-    all_seeds = ["Seed8mer", "Seed7mer", "Seed6mer", "Seed6merBulgeOrMismatch"]
+
+    # Canonical seed: Seed6mer is 1
+    df["CanonicalSeed"] = (df["Seed6mer"] == 1).astype(int)
 
     # Non-canonical seed: Seed6merBulgeOrMismatch is 1 AND Seed6mer is 0
     df["NonCanonicalSeed"] = ((df["Seed6merBulgeOrMismatch"] == 1) & (df["Seed6mer"] == 0)).astype(int)
 
-    # Canonical seed: Seed6merBulgeOrMismatch is 1 AND Seed6mer is 1
-    df["CanonicalSeed"] = ((df["Seed6merBulgeOrMismatch"] == 1) & (df["Seed6mer"] == 1)).astype(int)
-    
-    # No seed: If all seed types are 0
-    df["NoSeed"] = (~df[all_seeds].any(axis=1)).astype(int)
+    # No seed: Seed6merBulgeOrMismatch is 0
+    df["NoSeed"] = (df["Seed6merBulgeOrMismatch"] == 0).astype(int)
     
     return df
 
