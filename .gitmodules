@@ -1,0 +1,3 @@
+[submodule "miRBench_paper"]
+	path = miRBench_paper
+	url = https://github.com/BioGeMT/miRBench_paper.git
