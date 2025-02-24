@@ -105,23 +105,20 @@ def main():
     
     args = parser.parse_args()
 
-    # Create output directory if it doesn't exist
     os.makedirs(args.output_dir, exist_ok=True)
+    if not os.path.exists(args.output_dir):
+        raise RuntimeError(f"Failed to create output directory: {args.output_dir}")
     
-    # Set up logging
     log_path = os.path.join(args.output_dir, args.log_file)
     logger = setup_logger(log_path)
     
-    # Set seeds for reproducibility
     set_seeds(args.seed)
     logger.info(f"Starting training with seed: {args.seed}")
     
-    # Log all parameters
     logger.info("Training with the following parameters:")
     for arg in vars(args):
         logger.info(f"  {arg}: {getattr(args, arg)}")
     
-    # Prepare data generators
     logger.info("Preparing data generators...")
     train_data_gen = TrainDataGenerator(
         args.dataset_train,
@@ -141,7 +138,6 @@ def main():
         is_validation=True
     )
     
-    # Build model with specified hyperparameters
     logger.info("Building model...")
     model_instance = miRBind_CNN(
         cnn_num=args.cnn_num,
@@ -151,13 +147,10 @@ def main():
         dense_num=args.dense_num
     )
     
-    # Compile model
     model = model_instance.compile_model(lr=args.learning_rate)
     
-    # Log model summary
     model.summary(print_fn=logger.info)
     
-    # Prepare callbacks
     logger.info("Setting up training callbacks...")
     callbacks = [
         ModelCheckpoint(
@@ -178,10 +171,8 @@ def main():
         )
     ]
     
-    # Class weights
     class_weights = {0: 1, 1: args.class_weight}
     
-    # Train model
     logger.info("Starting model training...")
     history = model.fit(
         train_data_gen,
@@ -192,16 +183,17 @@ def main():
         verbose=1
     )
     
-    # Plot training history
+    final_model_path = os.path.join(args.output_dir, f"{args.model_name}_final.keras")
+    try:
+        model.save(final_model_path)
+    except Exception as e:
+        logger.error(f"Failed to save model: {str(e)}")
+        raise
+    logger.info(f"Final model saved to {final_model_path}")
+    
     logger.info("Plotting training history...")
     plot_training_history(history, args.output_dir)
     
-    # Save final model
-    final_model_path = os.path.join(args.output_dir, f"{args.model_name}_final.keras")
-    model.save(final_model_path)
-    logger.info(f"Final model saved to {final_model_path}")
-    
-    # Evaluate model on validation set
     logger.info("Evaluating model on validation set...")
     val_metrics = model.evaluate(val_data_gen, verbose=1)
     metric_names = model.metrics_names
