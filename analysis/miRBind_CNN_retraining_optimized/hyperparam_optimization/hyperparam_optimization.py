@@ -10,34 +10,11 @@ from tensorflow.keras.utils import Sequence
 import tensorflow as tf
 import random
 
+from utils import set_seeds, compile_model
 from data_generators import TrainDataGenerator
 import sys
 sys.path.append("../../../code/machine_learning/train/CNN_miRBind_2022/") 
 from miRBind_CNN_architecture import miRBind_CNN
-
-
-def set_seeds(seed):
-    """Set seeds for reproducibility."""
-    random.seed(seed)
-    np.random.seed(seed)
-    tf.random.set_seed(seed)
-
-
-def compile_model(model, lr):
-    opt = Adam(
-        learning_rate=lr,
-        beta_1=0.9,
-        beta_2=0.999,
-        epsilon=1e-07,
-        amsgrad=False,
-        name="Adam")
-
-    model.compile(
-        optimizer=opt,
-        loss='binary_crossentropy',
-        metrics=['accuracy', K.metrics.AUC(curve='PR')]
-    )
-    return model
 
 
 def objective(trial, train_data_gen, val_data_gen, dataset_ratio, best_model_path, epochs):

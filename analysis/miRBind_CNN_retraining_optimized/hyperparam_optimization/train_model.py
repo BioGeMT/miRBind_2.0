@@ -10,8 +10,7 @@ import os
 import sys
 import matplotlib.pyplot as plt
 
-# Import the data generator
-from utils import set_seeds, setup_logger
+from utils import set_seeds, setup_logger, compile_model
 from data_generators import TrainDataGenerator
 sys.path.append("../../../code/machine_learning/train/CNN_miRBind_2022/") 
 from miRBind_CNN_architecture import miRBind_CNN
@@ -147,7 +146,7 @@ def main():
         dense_num=args.dense_num
     )
     
-    model = model_instance.compile_model(lr=args.learning_rate)
+    model = compile_model(model_instance, lr=args.learning_rate)
     
     model.summary(print_fn=logger.info)
     

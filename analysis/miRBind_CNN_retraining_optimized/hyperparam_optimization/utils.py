@@ -9,6 +9,23 @@ def set_seeds(seed):
     random.seed(seed)
     np.random.seed(seed)
     tf.random.set_seed(seed)
+    
+    
+def compile_model(model, lr):
+    opt = Adam(
+        learning_rate=lr,
+        beta_1=0.9,
+        beta_2=0.999,
+        epsilon=1e-07,
+        amsgrad=False,
+        name="Adam")
+
+    model.compile(
+        optimizer=opt,
+        loss='binary_crossentropy',
+        metrics=['accuracy', K.metrics.AUC(curve='PR')]
+    )
+    return model
 
 
 def setup_logger(log_file):
