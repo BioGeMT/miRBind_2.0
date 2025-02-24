@@ -33,10 +33,10 @@ def plot_training_history(history, output_dir):
     
     # Plot AUPRC
     plt.subplot(1, 3, 2)
-    plt.plot(history.history['auprc'])
-    plt.plot(history.history['val_auprc'])
+    plt.plot(history.history['auc'])
+    plt.plot(history.history['val_auc'])
     plt.title('Area Under PR Curve')
-    plt.ylabel('AUPRC')
+    plt.ylabel('AUC')
     plt.xlabel('Epoch')
     plt.legend(['Train', 'Validation'], loc='upper left')
     
@@ -162,13 +162,13 @@ def main():
     callbacks = [
         ModelCheckpoint(
             filepath=os.path.join(args.output_dir, f"{args.model_name}_best.keras"),
-            monitor='val_auprc',
+            monitor='val_auc',
             save_best_only=True,
             mode='max',
             verbose=1
         ),
         EarlyStopping(
-            monitor='val_auprc',
+            monitor='val_auc',
             patience=args.patience,
             restore_best_weights=True,
             verbose=1

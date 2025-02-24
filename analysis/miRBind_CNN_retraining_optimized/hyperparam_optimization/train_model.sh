@@ -3,8 +3,8 @@
 train_file="encoded_dataset/Manakov2022_flat/AGO2_eCLIP_Manakov2022_train"
 
 train_file_size=2516195
-model_dir="mirBind_001_long_training"
-out_dir="evaluation_results/${model_dir}"
+model_name="mirBind_001_long_training"
+out_dir="evaluation_results/${model_name}"
 
 
 python train_model.py \
@@ -18,8 +18,8 @@ python train_model.py \
   --dense-num 2 \
   --learning-rate 0.00008241877487855944 \
   --batch-size 32 \
-  --epochs 20 \
-  --patience 4 \
-  --output-dir out_dir \
-  --model-name mirBind_001_long_training \
+  --epochs 70 \
+  --patience 6 \
+  --output-dir $out_dir \
+  --model-name $model_name \
   --seed 42
