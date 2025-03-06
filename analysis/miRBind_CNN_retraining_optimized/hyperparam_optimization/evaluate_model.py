@@ -7,28 +7,8 @@ from sklearn.metrics import precision_recall_curve, auc, roc_curve, roc_auc_scor
 
 from data_generators import TestDataGenerator
 from plots import plot_roc_curve, plot_pr_curve
+from utils import setup_logger
 
-
-def setup_logger(log_file):
-    """Set up a logger to record evaluation results"""
-    logger = logging.getLogger('model_evaluation')
-    logger.setLevel(logging.INFO)
-    
-    # Create handlers
-    file_handler = logging.FileHandler(log_file, 'w')
-    console_handler = logging.StreamHandler()
-    
-    # Create formatters and add to handlers
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    file_handler.setFormatter(formatter)
-    console_handler.setFormatter(formatter)
-    
-    # Add handlers to logger
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
-    
-    return logger
-    
 
 def evaluate_model(model, test_data, test_labels, logger, save_plots=True, output_dir='.', pred_threshold=0.5):
     """Evaluate model performance"""
@@ -93,8 +73,12 @@ def main():
                       help='Directory to save evaluation results')
     args = parser.parse_args()
 
+    os.makedirs(args.output_dir, exist_ok=True)
+    if not os.path.exists(args.output_dir):
+        raise RuntimeError(f"Failed to create output directory: {args.output_dir}")
+    
     # Set up logger
-    logger = setup_logger(os.path.join(args.output_dir, args.log_file))
+    logger = setup_logger(os.path.join(args.output_dir, args.log_file), 'model_evaluation')
     logger.info("Starting model evaluation")
     
     try:

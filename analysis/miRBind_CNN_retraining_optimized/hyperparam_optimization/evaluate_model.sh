@@ -3,12 +3,12 @@
 test_file_out="encoded_dataset/Manakov2022_flat/AGO2_eCLIP_Manakov2022_test"
 leftout_file_out="encoded_dataset/Manakov2022_flat/AGO2_eCLIP_Manakov2022_leftout"
 
-# best_model_path="models/best_model.keras"
-best_model_path="evaluation_results/mirBind_2002/models_tmp/best_model.keras"
-# evaluation_out_dir="evaluation_results/mirBind_1902"
-evaluation_out_dir="evaluation_results/mirBind_2002/models_tmp"
+# set the model_name to how you named your run
+timestamp=#TODO_SET_YOUR_TRAINED_MODEL'S_TIMESTAMP
+model_name="mirBind_${timestamp}"
+best_model_path="evaluation_results/${model_name}/${model_name}_final.keras"
+evaluation_out_dir="evaluation_results/${model_name}"
 
-# evaluate the best model
 python evaluate_model.py \
   --model-path $best_model_path \
   --dataset-test "../${test_file_out}_dataset.npy" \
@@ -26,6 +26,3 @@ python evaluate_model.py \
   --log-file "model_evaluation_leftout.log" \
   --save-plots \
   --output-dir $evaluation_out_dir
-
-
-# hyperparam_optimization/evaluation_results/mirBind_2002/models_tmp/best_model.keras

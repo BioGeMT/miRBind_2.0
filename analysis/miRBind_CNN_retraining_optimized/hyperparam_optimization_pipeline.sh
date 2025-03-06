@@ -1,5 +1,9 @@
 #!/bin/bash
 
+timestamp=$(date +"%Y%m%d_%H%M%S")
+model_name="mirBind_${timestamp}"
+best_model_path="models/${model_name}.keras"
+evaluation_out_dir="evaluation_results/${model_name}_hyperopt"
 
 train_file_in="../../data/chimeric_datasets/Manakov2022_flat/AGO2_eCLIP_Manakov2022_train.tsv"
 test_file_in="../../data/chimeric_datasets/Manakov2022_flat/AGO2_eCLIP_Manakov2022_test.tsv"
@@ -10,8 +14,6 @@ test_file_out="encoded_dataset/Manakov2022_flat/AGO2_eCLIP_Manakov2022_test"
 leftout_file_out="encoded_dataset/Manakov2022_flat/AGO2_eCLIP_Manakov2022_leftout"
 
 train_file_size=2516195
-best_model_path="models/best_model.keras"
-evaluation_out_dir="evaluation_results/mirBind_1902"
 
 CODE="../../code/machine_learning"
 

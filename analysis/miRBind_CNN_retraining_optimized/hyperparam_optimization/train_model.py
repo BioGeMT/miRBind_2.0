@@ -11,46 +11,10 @@ import sys
 import matplotlib.pyplot as plt
 
 from utils import set_seeds, setup_logger, compile_model
+from plots import plot_training_history
 from data_generators import TrainDataGenerator
 sys.path.append("../../../code/machine_learning/train/CNN_miRBind_2022/") 
 from miRBind_CNN_architecture import miRBind_CNN
-
-
-def plot_training_history(history, output_dir):
-    """Plot and save training metrics."""
-    # Create a figure with 3 subplots
-    plt.figure(figsize=(18, 5))
-    
-    # Plot accuracy
-    plt.subplot(1, 3, 1)
-    plt.plot(history.history['accuracy'])
-    plt.plot(history.history['val_accuracy'])
-    plt.title('Model Accuracy')
-    plt.ylabel('Accuracy')
-    plt.xlabel('Epoch')
-    plt.legend(['Train', 'Validation'], loc='upper left')
-    
-    # Plot AUPRC
-    plt.subplot(1, 3, 2)
-    plt.plot(history.history['auc'])
-    plt.plot(history.history['val_auc'])
-    plt.title('Area Under PR Curve')
-    plt.ylabel('AUC')
-    plt.xlabel('Epoch')
-    plt.legend(['Train', 'Validation'], loc='upper left')
-    
-    # Plot loss
-    plt.subplot(1, 3, 3)
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('Model Loss')
-    plt.ylabel('Loss')
-    plt.xlabel('Epoch')
-    plt.legend(['Train', 'Validation'], loc='upper left')
-    
-    plt.tight_layout()
-    plt.savefig(os.path.join(output_dir, 'training_history.png'))
-    plt.close()
 
 
 def main():
@@ -109,7 +73,7 @@ def main():
         raise RuntimeError(f"Failed to create output directory: {args.output_dir}")
     
     log_path = os.path.join(args.output_dir, args.log_file)
-    logger = setup_logger(log_path)
+    logger = setup_logger(log_path, 'mirbind_train')
     
     set_seeds(args.seed)
     logger.info(f"Starting training with seed: {args.seed}")
@@ -138,13 +102,14 @@ def main():
     )
     
     logger.info("Building model...")
+    
     model_instance = miRBind_CNN(
         cnn_num=args.cnn_num,
         kernel_size=args.kernel_size,
         pool_size=args.pool_size,
         dropout_rate=args.dropout_rate,
         dense_num=args.dense_num
-    )
+    ).model
     
     model = compile_model(model_instance, lr=args.learning_rate)
     

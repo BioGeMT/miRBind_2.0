@@ -2,6 +2,8 @@ import numpy as np
 import tensorflow as tf
 import random
 import logging
+from tensorflow.keras.optimizers import Adam
+from tensorflow import keras as K
 
 
 def set_seeds(seed):
@@ -28,19 +30,22 @@ def compile_model(model, lr):
     return model
 
 
-def setup_logger(log_file):
-    """Configure logging to file and console."""
-    logger = logging.getLogger('mirbind_train')
+def setup_logger(log_file, logger_name):
+    """Set up a logger to file and console"""
+    logger = logging.getLogger(logger_name)
     logger.setLevel(logging.INFO)
     
-    # Create file handler
+    # Create handlers
     file_handler = logging.FileHandler(log_file, 'w')
-    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
-    logger.addHandler(file_handler)
-    
-    # Create console handler
     console_handler = logging.StreamHandler()
-    console_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
+    
+    # Create formatters and add to handlers
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
+    
+    # Add handlers to logger
+    logger.addHandler(file_handler)
     logger.addHandler(console_handler)
     
     return logger
