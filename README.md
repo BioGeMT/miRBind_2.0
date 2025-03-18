@@ -33,3 +33,26 @@ It might happen that you eg. find a bug or want to make faster some of the share
 Then change the code, but also make sure to find all its usages in the `analysis` folder and update them accordingly / rerun the analysis / put there a flag (maybe an issue) so people know that their results might be outdated.
 
 The same thing applies when there is an update in a **dataset** or to a **model**.
+
+### Models Leaderboard:
+
+Here we track the performance of ML models across Manakov22 test and leftout datasets. Models are ranked based on the sum(AUPRC(test), AUPRC(leftout)).
+
+#### Leaderboard
+
+| Rank | Model                              | AUPRC(test)  | AUPRC(leftout) | link to model  | link to code  |
+|------|------------------------------------|--------------|----------------|----------------|---------------|
+| 1    | Pairwise encoding CNN              | 84.97        | 83.08          | [model](https://drive.google.com/drive/folders/1dFsm0CcC7WL2mP4h5a6UZtVt57ICH3vB?usp=drive_link) | LINK |
+| 2    | retrained miRBind CNN (published in miRBench)  | 84.00        | 81.00          | LINK | LINK |
+| 3    | TargetScanCNN                      | 77.00        | 76.00          | LINK | LINK |
+| 4    | ...                                | 00.0         | 00.0           | LINK | LINK |
+| 5    | ...                                | 00.0         | 00.0           | LINK | LINK |
+| 6    | ...                                | 00.0         | 00.0           | LINK | LINK |
+| 7    | ...                                | 00.0         | 00.0           | LINK | LINK |
+| 8    | ...                                | 00.0         | 00.0           | LINK | LINK |
+
+#### How to Submit Your Model
+Follow these steps:
+1. Push your code to reproduce and evaluate the model to GitHub
+2. Create a new folder for your trained model in [Google Drive](https://drive.google.com/drive/folders/1IH7_CjxWW7Q0dKEFJY3L3yo4B2WWxJh2?usp=drive_link) and upload it
+3. Fill in the table with metrics and links to the model and code (the path to the folder containing the code and guidelines to run it is sufficient)
