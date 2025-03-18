@@ -34,7 +34,7 @@ Then change the code, but also make sure to find all its usages in the `analysis
 
 The same thing applies when there is an update in a **dataset** or to a **model**.
 
-### Models Leaderboard:
+### Models leaderboard
 
 Here we track the performance of ML models across Manakov22 test and leftout datasets. Models are ranked based on the sum(AUPRC(test), AUPRC(leftout)).
 
@@ -51,8 +51,8 @@ Here we track the performance of ML models across Manakov22 test and leftout dat
 | 7    | ...                                | 00.0         | 00.0           | LINK | LINK |
 | 8    | ...                                | 00.0         | 00.0           | LINK | LINK |
 
-#### How to Submit Your Model
-Follow these steps:
+#### How to add your model
+
 1. Push your code to reproduce and evaluate the model to GitHub
 2. Create a new folder for your trained model in [Google Drive](https://drive.google.com/drive/folders/1IH7_CjxWW7Q0dKEFJY3L3yo4B2WWxJh2?usp=drive_link) and upload it
 3. Fill in the table with metrics and links to the model and code (the path to the folder containing the code and guidelines to run it is sufficient)
