@@ -13,7 +13,7 @@ python train_pairwise_model.py \
   --target_length 50 \
   --mirna_length 25 \
   --batch_size 32 \
-  --num_epochs 200 \
+  --num_epochs 20 \
   --val_fraction 0.1 \
   --learning_rate 0.001 \
   --embedding_dim 8 \
