@@ -89,7 +89,7 @@ def main():
             cleanup()
             
         # define output path
-        save_path = os.path.join(save_dir, f"{args.regularization}_{dataset_name}_{count}.tsv")
+        save_path = os.path.join(save_dir, f"{args.regularization}_{dataset_name}_pred{count}.tsv")
         
         count += 1
 

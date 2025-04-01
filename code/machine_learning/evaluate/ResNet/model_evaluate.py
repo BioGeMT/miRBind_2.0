@@ -9,7 +9,6 @@ from helper_functions.model_utils import (load_data,
                                           make_files, 
                                           plot_roc_crossval, 
                                           plot_pr_crossval,
-                                          moving_leftout_dataset,
                                           compute_metrics,  
                                           cleanup)
 
@@ -30,9 +29,6 @@ def main():
     test_data_files = sorted(args.encoded_data.split(','))
     test_label_files = sorted(args.encoded_labels.split(','))
     prediction_files = sorted(args.predictions.split(','))
-    
-    # this step is done specifically for the NoReg_AGO2_eCLIP_Manakov2022_leftout_dataset_3.tsv prediction
-    moving_leftout_dataset(prediction_files)
     
     # initialise save predictions path
     results_file_path = f'Saves/ResNet_{args.regularization}_evaluation_logs.txt'
@@ -81,6 +77,7 @@ def main():
             if args.plot_plots == 'true':
                 print("Plotting ROC and PR curves ...")
                 roc_auc = plot_roc_crossval(test_labels, predictions, model_type, save_dir, model_name, count_plots, count_preds)
+                count_plots += 1
                 pr_ap = plot_pr_crossval(test_labels, predictions, model_type, save_dir, model_name, count_plots, count_preds)
             else:
                 print("Skipping plotting ...")
@@ -97,8 +94,6 @@ def main():
                 results_file.write(f"**ROC-AUC:** {roc_auc:.3f}\n\n")
                 results_file.write(f"**F1-score:** {metrics_dict['f1']:.3f}\n")
                 results_file.write("=" * 100 + "\n")
-            
-            count_plots += 1
         
         count_preds += 1
         

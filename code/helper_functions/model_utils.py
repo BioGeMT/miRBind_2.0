@@ -301,24 +301,6 @@ def save_model(model, save_dir, model_type, regularizer_type, dataset_name, drop
     model.save(model_path)
     print("----- <Model Saved Successfully> -----\n\n")
     
-# * MOVING LEFTOUT DATASET ---
-
-# this step is done specifically for the NoReg_AGO2_eCLIP_Manakov2022_leftout_dataset_3.tsv prediction
-def moving_leftout_dataset(prediction_files):
-    # this step is done specifically for the NoReg_AGO2_eCLIP_Manakov2022_leftout_dataset_3.tsv prediction
-    target_files = [
-        'NoReg_AGO2_eCLIP_Manakov2022_leftout_dataset_3.tsv',
-        'WithReg_AGO2_eCLIP_Manakov2022_leftout_dataset_3.tsv'
-    ]
-
-    # iterate over each target files
-    for target_file in target_files:
-        if any(target_file in file_path and os.path.exists(file_path) for file_path in prediction_files):
-            # Pop from the last index
-            item = prediction_files.pop(-1)
-            # Insert at the 3rd index to align with the test data and label files
-            prediction_files.insert(2, item)
-    
 # * CLEANUP ---
 
 def cleanup():
