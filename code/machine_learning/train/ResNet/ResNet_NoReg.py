@@ -43,9 +43,6 @@ def main():
     training_data_files = sorted(args.encoded_data.split(','))
     training_labels_files = sorted(args.encoded_labels.split(','))
     
-    print(f"Training data files: {training_data_files}")
-    print(f"Training label files: {training_labels_files}")
-    
     # create the save directory
     make_files(os.path.split(save_dir)[0], [os.path.split(save_dir)[1]])
 
@@ -61,19 +58,10 @@ def main():
         # extract dataset name
         dataset_name = os.path.splitext(os.path.basename(training_data_file))[0]
         dataset_name = dataset_name.replace('_train_dataset', '')
-        label_name = os.path.splitext(os.path.basename(training_label_file))[0]
 
-        # load the training dataset
-        print(f"\n----- <Loading Encoded Training Data ffrom {dataset_name} and {label_name}> -----")
         # load the encoded training data and labels        
         encoded_training_data, training_labels = load_data(training_data_file, training_label_file)
-        
-        print(f"Encoded data shape: {encoded_training_data.shape}")
-        print(f"Training labels shape: {training_labels.shape}")
-        print("----- <Encoded Training Data Loaded Successfully> -----\n")
-
         input_shape = encoded_training_data.shape[1:]
-        print(f"Input shape: {input_shape}\n")
 
         # print regularizer type
         print(f"\n\nUsing Regularizer: {regularizer_type}")
@@ -163,7 +151,7 @@ def main():
             print("\n----- Final Configuration Found -----")
             print(f"Regularizer: {best_config['regularizer_type']}, dropout_rate: {best_config['dropout_rate']}")
             with open(results_file_path, 'a') as results_file:
-                results_file.write("\n----- Optimal Configuration Found -----\n")
+                results_file.write("\n----- Final Configuration Found -----\n")
                 results_file.write(f"Regularizer: {best_config['regularizer_type']}, dropout_rate: {best_config['dropout_rate']}\n\n")
                 results_file.write("=" * 100 + "\n")
             

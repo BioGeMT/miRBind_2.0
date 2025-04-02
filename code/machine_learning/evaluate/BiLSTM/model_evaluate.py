@@ -101,11 +101,9 @@ def main():
                 results_file.write(f"**Test precision:** {metrics_dict['precision']:.3f}\n")
                 results_file.write(f"**Test recall:** {metrics_dict['recall']:.3f}\n")
                 results_file.write(f"**PR-AP:** {pr_ap:.3f}\n")
-                results_file.write(f"**ROC-AUC:** {roc_auc:.3f}\n\n")
-                results_file.write(f"**F1-score:** {metrics_dict['f1']:.3f}\n")
+                results_file.write(f"**ROC-AUC:** {roc_auc:.3f}\n")
+                results_file.write(f"**F1-score:** {metrics_dict['f1']:.3f}\n\n")
                 results_file.write("=" * 100 + "\n")
-
-            count_plots += 1
             
         count_preds += 1
             

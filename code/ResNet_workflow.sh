@@ -1,21 +1,6 @@
 #!/bin/bash
 
 
-# function to print error messages in red
-print_error() {
-    echo -e "\e[31mERROR: $1\e[0m"
-}
-
-# function to print success messages in green
-print_success() {
-    echo -e "\e[32m$1\e[0m"
-}
-
-# function to print warning messages in orange
-print_warning() {
-    echo -e "\e[33m$1\e[0m"
-}
-
 
 # function to display usage information
 usage() {
@@ -37,6 +22,48 @@ usage() {
 if [[ "$1" == "-h" || "$1" == "--help" ]]; then
     usage
 fi
+
+
+
+# * START WORKFLOW ---
+PATH_TO_BASH_LOG="ResNet_Bash_Logs.txt"
+
+timestamp() {
+    date '+%H:%M:%S'
+}
+
+# function to print error messages in red
+print_error() {
+    local msg="[$(timestamp)] ERROR: $1"
+    echo -e "\e[31m$msg\e[0m"
+    echo "$msg" >> "$PATH_TO_BASH_LOG"
+}
+
+# function to print success messages in green
+print_success() {
+    local msg="[$(timestamp)] $1"
+    echo -e "\e[32m$msg\e[0m"
+    echo "$msg" >> "$PATH_TO_BASH_LOG"
+}
+
+# function to print warning messages in yellow
+print_warning() {
+    local msg="[$(timestamp)] $1"
+    echo -e "\e[33m$msg\e[0m"
+    echo "$msg" >> "$PATH_TO_BASH_LOG"
+}
+
+# function to print echo messages
+print_echo() {
+    echo "$1"
+    echo "$1" >> "$PATH_TO_BASH_LOG"
+}
+
+
+
+DT=$(date '+%d/%m/%Y --- %H:%M:%S')
+echo "ResNet $RESNET_TYPE with $REG_TYPE workflow started at [$DT]" > "$PATH_TO_BASH_LOG"
+print_echo ""
 
 
 
@@ -138,7 +165,7 @@ print_success "Found Encoder Script: $ENCODER_SCRIPT_BASENAME"
 print_success "Found Training Datasets"
 print_success "Found Testing Datasets"
 print_success "Encoding..."
-echo ""
+print_echo ""
 
 # encode training datasets
 for dataset in $TRAINING_DATA_FILES; do
@@ -162,7 +189,7 @@ for dataset in $TRAINING_DATA_FILES; do
     fi
 done
 
-echo ""
+print_echo ""
 
 # encode testing datasets
 for dataset in $TESTING_DATA_FILES; do
@@ -186,9 +213,9 @@ for dataset in $TESTING_DATA_FILES; do
     fi
 done
 
-echo ""
+print_echo ""
 print_success "Successfully encoded all datasets"
-echo ""
+print_echo ""
 
 
 
@@ -210,7 +237,7 @@ print_success "Selected ResNet type: $RESNET_TYPE"
 print_success "Selected regularization type: $REG_TYPE"
 print_success "Selected plot bool: $PLOT_BOOL"
 print_success "Proceeding with execution..."
-echo ""
+print_echo ""
 
 # ensure training directory exist
 if [ ! -d "$TRAINING_DATASETS_PATH" ]; then
@@ -238,8 +265,8 @@ fi
 # print confirmation
 print_success "Found training datasets"
 print_success "Found training labels"
-print_success "Training model..."
-echo ""
+print_success "Training model... - See training logs for more details"
+print_echo ""
 
 # run the training script
 python3 "$SCRIPT_PATH" --ResNet_type "$RESNET_TYPE" --encoded_data "$TRAIN_DATA_FILES" --encoded_labels "$TRAIN_LABEL_FILES" --plot_plots "$PLOT_BOOL"
@@ -251,7 +278,7 @@ if [ $? -ne 0 ]; then
 fi
 
 print_success "Training completed successfully"
-echo ""
+print_echo ""
 
 
 
@@ -303,7 +330,7 @@ print_success "Selected regularization type: $REG_TYPE"
 print_success "Found testing datasets"
 print_success "Found trained models"
 print_success "Running predictions..."
-echo ""
+print_echo ""
 
 # run the predictions script
 python3 "$PREDICTIONS_SCRIPT" --ResNet_type "$RESNET_TYPE" --encoded_data "$TEST_DATA_FILES" --trained_models "$MODEL_FILES" --regularization "$REG_TYPE"
@@ -315,7 +342,7 @@ if [ $? -ne 0 ]; then
 fi
 
 print_success "Predictions obtained successfully"
-echo ""
+print_echo ""
 
 
 
@@ -363,7 +390,7 @@ print_success "Selected plot bool: $PLOT_BOOL"
 print_success "Found testing datasets"
 print_success "Found testing labels"
 print_success "Found predictions"
-print_success "Running evaluations..."
+print_success "Running evaluations... - See evaluation logs for more details"
 echo ""
 
 # run the evaluations script
@@ -375,10 +402,12 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo ""
+print_echo ""
 print_success "Evaluations obtained successfully"
-echo ""
+print_echo ""
 print_success "ResNet $RESNET_TYPE with $REG_TYPE pipeline completed successfully"
 print_warning "NOTE: Please remove, rename or move the 'Saves' directory to avoid conflicts with future runs"
+
+mv "$PATH_TO_BASH_LOG" "Saves/"
 
 exit 0

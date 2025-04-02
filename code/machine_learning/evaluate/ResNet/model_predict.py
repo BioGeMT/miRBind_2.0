@@ -28,9 +28,6 @@ def main():
     test_data_files = sorted(args.encoded_data.split(','))
     model_files = sorted(args.trained_models.split(','), key=simple_sort_key)
     
-    print(f"Test data files: {test_data_files}")
-    print(f"Model files: {model_files}")
-    
     # check if --regularization is set to either "NoReg" or "WithReg"
     if args.regularization not in ["NoReg", "WithReg"]:
         raise ValueError(f"!!! Invalid regularization argument: {args.regularization} - Please use either 'NoReg' or 'WithReg' !!!")
@@ -101,7 +98,7 @@ def main():
         del encoded_test_data, predictions_df
         cleanup()
 
-    print(f"\n----- <All predictions saved successfully in {save_dir}> -----\n\n")
+    print(f"\n----- <All predictions saved successfully in {save_dir}> -----\n")
 
 
 if __name__ == "__main__":

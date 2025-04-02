@@ -99,7 +99,7 @@ def main():
         del encoded_test_data, predictions_df
         cleanup()
 
-    print(f"\n----- <All predictions saved successfully in {save_dir}> -----\n\n")
+    print(f"\n----- <All predictions saved successfully in {save_dir}> -----\n")
 
 
 if __name__ == "__main__":
