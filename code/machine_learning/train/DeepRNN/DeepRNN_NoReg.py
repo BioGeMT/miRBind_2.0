@@ -61,10 +61,11 @@ def main():
     with open(results_file_path, 'w') as results_file:
         pass
     
-    config_results = []
-    
     # loop through all datasets
     for training_data_file, training_label_file in zip(training_data_files, training_labels_files):
+        # initialize a list to hold the configuration results
+        config_results = []
+        
         # extract dataset name
         dataset_name = os.path.splitext(os.path.basename(training_data_file))[0]
         dataset_name = dataset_name.replace('_train_dataset', '')
@@ -131,8 +132,7 @@ def main():
                 del elapsed_training_time, X_train, y_train, X_val, y_val, model, history
                 cleanup()
                 
-            if metrics:
-                calculate_avg_std(cv_accuracies, cv_losses, cv_f1s, cv_precisions, cv_recalls, dropout_rate, regularizer_type, results_file_path, config_results)
+            calculate_avg_std(cv_accuracies, cv_losses, cv_f1s, cv_precisions, cv_recalls, dropout_rate, regularizer_type, results_file_path, config_results)
             
             del metrics, cv_accuracies, cv_f1s, cv_precisions, cv_recalls
             cleanup()
@@ -173,6 +173,8 @@ def main():
             # save the final model
             save_model(final_model, save_dir, model_type, best_config['regularizer_type'], dataset_name, best_config['dropout_rate'])
             print("\n----- Final Model Trained and Saved -----\n")
+        else:
+            print("\n!!! No configurations found !!!")
             
         del encoded_training_data, training_labels, final_model, config_results, best_config, best_f1
         cleanup()
