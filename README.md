@@ -42,14 +42,15 @@ Here we track the performance of ML models across Manakov22 test and leftout dat
 
 | Rank | Model                              | AUPRC(test)  | AUPRC(leftout) | link to model  | link to code  | date  | authors  |
 |------|------------------------------------|--------------|----------------|----------------|---------------|---------------|---------------|
-| 1    | Pairwise encoding CNN              | 84.97        | 83.08          | [model](https://drive.google.com/drive/folders/1dFsm0CcC7WL2mP4h5a6UZtVt57ICH3vB?usp=drive_link) | [code](https://github.com/BioGeMT/miRBind_2.0/tree/david/CNN_pairwise_encoding/analysis/pairwise_encoding) | 19/03/2025 | David, Panos |
-| 2    | retrained miRBind CNN (published in miRBench)  | 84.00        | 81.00          | LINK | LINK | 19/03/2025 | Eva? |
-| 3    | TargetScanCNN                      | 77.00        | 76.00          | LINK | LINK | 19/03/2025 | TargetScan |
-| 4    | ...                                | 00.0         | 00.0           | LINK | LINK | DATE | AUTHOR |
+| 1    | Pairwise encoding with conservation (+2 channels)  | 85.8         | 82.4           | [model](https://drive.google.com/drive/folders/17pGBXqX7aoH_KyyoulRa3zFegzRB2P2q?usp=drive_link) | [code] () | 27/03/2025 | Dimos, David. Panos |
+| 2    | Pairwise encoding CNN              | 84.97        | 83.08          | [model](https://drive.google.com/drive/folders/1dFsm0CcC7WL2mP4h5a6UZtVt57ICH3vB?usp=drive_link) | [code](https://github.com/BioGeMT/miRBind_2.0/tree/david/CNN_pairwise_encoding/analysis/pairwise_encoding) | 19/03/2025 | David, Panos |
+| 3    | retrained miRBind CNN (published in miRBench)  | 84.00        | 81.00          | LINK | LINK | 19/03/2025 | Eva? |
+| 4    | TargetScanCNN                      | 77.00        | 76.00          | LINK | LINK | 19/03/2025 | TargetScan |
 | 5    | ...                                | 00.0         | 00.0           | LINK | LINK | DATE | AUTHOR |
 | 6    | ...                                | 00.0         | 00.0           | LINK | LINK | DATE | AUTHOR |
 | 7    | ...                                | 00.0         | 00.0           | LINK | LINK | DATE | AUTHOR |
 | 8    | ...                                | 00.0         | 00.0           | LINK | LINK | DATE | AUTHOR |
+| 9    | ...                                | 00.0         | 00.0           | LINK | LINK | DATE | AUTHOR |
 
 #### How to add your model
 
