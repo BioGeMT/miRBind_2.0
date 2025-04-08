@@ -7,12 +7,18 @@ import argparse
 import numpy as np
 from sklearn.model_selection import KFold
 from DeepRNN_Architectures import DeepRNN
-from helper_functions.model_utils import (#load_data, 
+from helper_functions.model_utils import (set_seed,
+                                          #load_data, 
                                           make_files, 
-                                          calculate_avg_std, 
+                                          calculate_avg_std,
+                                          subset_data, 
                                           train_model,
                                           save_model, 
                                           cleanup)
+
+# * SEEDING - FOR REPRODUCIBILITY ---
+
+set_seed(42)
 
 # * PARAMS ---
 
@@ -25,6 +31,8 @@ results_file_path = 'Saves/DeepRNN_NoReg_training_logs.txt'
 save_dir = "Saves/DeepRNN_Models"
 regularizer_type = "NoReg"
 model_type = "DeepRNN"
+
+list_of_large_datasets = ["AGO2_eCLIP_Manakov2022_train_dataset"]
 
 # hyperparameter combinations
 dropout_rates = [0.05, 0.09, 0.13, 0.17, 0.21, 0.25]
@@ -46,9 +54,9 @@ def load_data(data_file, label_file):
 def main():
     # argument parser for dataset path and learning rate
     parser = argparse.ArgumentParser(description="Train a DeepRNN model for miRNA-mRNA target site classification")
-    parser.add_argument("-e_data", "--encoded_data", required=True, default=None, type=str, help="Path to the encoded training dataset (.npy file)")
-    parser.add_argument("-e_labels", "--encoded_labels", required=True, default=None, type=str, help="Path to the encoded training labels (.npy file)")
-    parser.add_argument("-plots", "--plot_plots", required=True, default=None, type=str, help="Wheather to save the training plots or not (true/false)")
+    parser.add_argument("-e_data", "--encoded_data", required=True, type=str, help="Path to the encoded training dataset (.npy file)")
+    parser.add_argument("-e_labels", "--encoded_labels", required=True, type=str, help="Path to the encoded training labels (.npy file)")
+    parser.add_argument("-plots", "--plot_plots", required=True, type=str, help="Whether to save the training plots or not (true/false)")
     args = parser.parse_args()
     
     training_data_files = sorted(args.encoded_data.split(','))
@@ -67,12 +75,11 @@ def main():
         config_results = []
         
         # extract dataset name
-        dataset_name = os.path.splitext(os.path.basename(training_data_file))[0]
-        dataset_name = dataset_name.replace('_train_dataset', '')
+        dataset_name = os.path.splitext(os.path.basename(training_data_file))[0].replace('_train_dataset', '')
         
         # load the encoded training data and labels        
-        encoded_training_data, training_labels = load_data(training_data_file, training_label_file)
-        input_shape = encoded_training_data.shape[1:]
+        full_training_data, full_training_labels = load_data(training_data_file, training_label_file)
+        input_shape = full_training_data.shape[1:]
             
         # print regularizer type
         print(f"\n\nUsing Regularizer: {regularizer_type}")
@@ -80,6 +87,18 @@ def main():
         with open(results_file_path, 'a') as results_file:
             results_file.write(f"Using Regularizer: {regularizer_type} ---\n")
             results_file.write("=" * 100 + "\n")
+        
+        # check if the dataset is large - subset if true
+        if os.path.basename(os.path.splitext(training_data_file)[0]) in list_of_large_datasets:
+            # subset the data for each configuration - 25000 samples
+            encoded_data, encoded_labels = subset_data(full_training_data, full_training_labels)
+            
+            # replace input shape
+            input_shape = encoded_data.shape[1:]
+            print(f"\nSubsetted {dataset_name} dataset to {encoded_data.shape[0]} samples")
+        else:
+            # use the full training data
+            encoded_data, encoded_labels = full_training_data, full_training_labels
         
         # loop through all hyperparameter combinations
         for index, dropout_rate in enumerate(dropout_rates, start=1):
@@ -94,16 +113,12 @@ def main():
             # create 5-fold cross validation splitter
             kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
             
-            fold_count = 1
-            
-            for train_index, val_index in kf.split(encoded_training_data):
+            for fold_count, (train_index, val_index) in enumerate(kf.split(encoded_data), start=1):
                 print(f"\n--- Fold {fold_count} of {n_splits} ---")
                 
                 # get training and validation data
-                X_train = encoded_training_data[train_index].copy()
-                y_train = training_labels[train_index].copy()
-                X_val = encoded_training_data[val_index].copy()
-                y_val = training_labels[val_index].copy()
+                X_train, y_train = encoded_data[train_index].copy(), encoded_labels[train_index].copy()
+                X_val, y_val = encoded_data[val_index].copy(), encoded_labels[val_index].copy()
             
                 # build model
                 model = DeepRNN(input_shape, dropout_rate, learning_rate)
@@ -119,23 +134,17 @@ def main():
                     results_file.write(f"\nFold {fold_count} | Time taken for training with regularizer: {regularizer_type}, dropout_rate: {dropout_rate} | {(elapsed_training_time):.3f} s")
                     results_file.write(f"\nFold {fold_count} Metrics | Accuracy: {metrics['accuracy']:.3f}, Loss: {metrics['loss']:.3f}, F1 Score: {metrics['f1']:.3f}, Precision: {metrics['precision']:.3f}, Recall: {metrics['recall']:.3f}\n")
                 
-                # Save fold metrics
-                if metrics:
-                    cv_accuracies.append(metrics['accuracy'])
-                    cv_losses.append(metrics['loss'])
-                    cv_f1s.append(metrics['f1'])
-                    cv_precisions.append(metrics['precision'])
-                    cv_recalls.append(metrics['recall'])
-                
-                fold_count += 1
+                # save fold metrics
+                cv_accuracies.append(metrics['accuracy'])
+                cv_losses.append(metrics['loss'])
+                cv_f1s.append(metrics['f1'])
+                cv_precisions.append(metrics['precision'])
+                cv_recalls.append(metrics['recall'])
             
                 del elapsed_training_time, X_train, y_train, X_val, y_val, model, history
                 cleanup()
                 
             calculate_avg_std(cv_accuracies, cv_losses, cv_f1s, cv_precisions, cv_recalls, dropout_rate, regularizer_type, results_file_path, config_results)
-            
-            del metrics, cv_accuracies, cv_f1s, cv_precisions, cv_recalls
-            cleanup()
             
         # check if any config_results exist
         if config_results:
@@ -152,21 +161,25 @@ def main():
                     best_config = config
             
             print("\n----- Final Configuration Found -----")
-            print(f"Regularizer: {best_config['regularizer_type']}, dropout_rate: {best_config['dropout_rate']}")
+            print(f"Regularizer: {best_config['regularizer_type']}, dropout_rate: {best_config['dropout_rate']}, avg_f1: {best_config['avg_f1']:.3f}")
             with open(results_file_path, 'a') as results_file:
                 results_file.write("\n----- Optimal Configuration Found -----\n")
-                results_file.write(f"Regularizer: {best_config['regularizer_type']}, dropout_rate: {best_config['dropout_rate']}\n\n")
+                results_file.write(f"Regularizer: {best_config['regularizer_type']}, dropout_rate: {best_config['dropout_rate']}, avg_f1: {best_config['avg_f1']:.3f}\n\n")
                 results_file.write("=" * 100 + "\n")
             
             # train a final model on the full training set using the best configuration.
             print("\n----- Training Final Model on Full Training Data -----")
             
+            # load the full training data
+            encoded_data, encoded_labels = load_data(training_data_file, training_label_file)
+            input_shape = encoded_data.shape[1:]
+            
             # build final model
-            final_model = DeepRNN(input_shape, dropout_rate, learning_rate)
+            final_model = DeepRNN(input_shape, best_config["dropout_rate"], learning_rate)
             
             # train final model
             final_model, _, _, _ = train_model(final_model, epochs, batch_size, 
-                                               encoded_training_data, training_labels, model_type, 
+                                               encoded_data, encoded_labels, model_type, 
                                                dataset_name, best_config['regularizer_type'], 
                                                best_config['dropout_rate'], save_dir, args)
             
@@ -174,9 +187,9 @@ def main():
             save_model(final_model, save_dir, model_type, best_config['regularizer_type'], dataset_name, best_config['dropout_rate'])
             print("\n----- Final Model Trained and Saved -----\n")
         else:
-            print("\n!!! No configurations found !!!")
+            raise RuntimeError("\n!!! No configurations found !!!")
             
-        del encoded_training_data, training_labels, final_model, config_results, best_config, best_f1
+        del encoded_data, encoded_labels, final_model, config_results, best_config, best_f1
         cleanup()
 
     # write completion message to results file

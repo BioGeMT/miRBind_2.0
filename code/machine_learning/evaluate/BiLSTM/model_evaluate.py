@@ -6,12 +6,17 @@ import os
 import argparse
 import numpy as np
 import pandas as pd
-from helper_functions.model_utils import (#load_data, 
+from helper_functions.model_utils import (set_seed,
+                                          #load_data, 
                                           make_files, 
                                           plot_roc_crossval, 
                                           plot_pr_crossval,
                                           compute_metrics,  
                                           cleanup)
+
+# * SEEDING - FOR REPRODUCIBILITY ---
+
+set_seed(42)
 
 # * LOADING DATA ---
 

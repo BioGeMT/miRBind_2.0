@@ -7,10 +7,15 @@ import argparse
 import numpy as np
 import pandas as pd
 from tensorflow.keras.models import load_model
-from helper_functions.model_utils import (#load_data, 
+from helper_functions.model_utils import (set_seed,
+                                          #load_data, 
                                           make_files,
                                           simple_sort_key, 
                                           cleanup)
+
+# * SEEDING - FOR REPRODUCIBILITY ---
+
+set_seed(42)
 
 # * LOADING DATA ---
 

@@ -2,6 +2,7 @@
 import os
 import gc
 import time
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -15,6 +16,17 @@ from sklearn.metrics import (accuracy_score,
                              average_precision_score, 
                              precision_recall_curve)
 
+# * SEEDING ---
+
+def set_seed(seed):
+    # set random seed for reproducibility
+    random.seed(seed)
+    np.random.seed(seed)
+    tf.random.set_seed(seed)
+    
+    # print the seed used
+    print(f"Seed set to: {seed}")
+    
 # * PLOTTING ---
 
 # plot training and validation accuracy and loss
@@ -286,7 +298,23 @@ def train_model(model, epochs, batch_size, training_data, training_labels, model
     
     # return model and history
     return model, history, elapsed_training_timer, metrics_dict
+
+# * SUBSETTING TRAINING DATASETS ---
+
+def subset_data(encoded_data, labels, subset_size=25000):
+    # check if the subset size is larger than the available data
+    if subset_size > len(encoded_data):
+        raise ValueError(f"!!! Subset size {subset_size} is larger than the available data size {len(encoded_data)} !!!")
     
+    # randomly select indices for the subset
+    subset_indices = np.random.choice(len(encoded_data), subset_size, replace=False)
+    
+    # create the subset using the selected indices
+    encoded_training_data = encoded_data[subset_indices]
+    training_labels = labels[subset_indices]
+    
+    return encoded_training_data, training_labels
+
 # * SAVING MODEL ---
 
 def save_model(model, save_dir, model_type, regularizer_type, dataset_name, dropout_rate, reg_factor=None):

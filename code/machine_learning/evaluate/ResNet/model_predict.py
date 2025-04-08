@@ -7,10 +7,15 @@ import argparse
 import pandas as pd
 from tensorflow.keras.models import load_model
 from machine_learning.train.ResNet.ResNet_Architectures import ResBlock_SmallAndMedium, ResBlock_Large
-from helper_functions.model_utils import (load_data, 
+from helper_functions.model_utils import (set_seed,
+                                          load_data, 
                                           make_files,
                                           simple_sort_key, 
                                           cleanup)
+
+# * SEEDING - FOR REPRODUCIBILITY ---
+
+set_seed(42)
 
 # * MAIN - PREDICT FUNCTION ---
 
