@@ -57,7 +57,7 @@ def main():
     args = parser.parse_args()
 
     # seeding
-    print(f"Seed set to: {args.seed}")
+    print(f"\nSeed set to: {args.seed}")
     set_seed(args.seed)
     
     # sorting the model and dataset paths and split them into lists
