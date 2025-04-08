@@ -14,10 +14,6 @@ from helper_functions.model_utils import (set_seed,
                                           compute_metrics,  
                                           cleanup)
 
-# * SEEDING - FOR REPRODUCIBILITY ---
-
-set_seed(42)
-
 # * LOADING DATA ---
 
 def load_data(data_file, label_file):
@@ -37,7 +33,11 @@ def main():
     parser.add_argument("-preds", "--predictions", required=True, default=None, type=str, help="List of paths to prediction files (.tsv files)")
     parser.add_argument("-reg", "--regularization", required=True, default=None, type=str, help="NoReg or WithReg using in naming the .tsv file")
     parser.add_argument("-plots", "--plot_plots", required=True, default=None, type=str, help="Wheather to save the training plots or not (true/false)")    
+    parser.add_argument("-seed", "--seed", required=True, type=int, help="Random seed for reproducibility")
     args = parser.parse_args()
+
+    # seeding
+    set_seed(args.seed)
     
     # split model and dataset paths into lists and sort them
     test_data_files = sorted(args.encoded_data.split(','))

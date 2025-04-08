@@ -24,9 +24,6 @@ def set_seed(seed):
     np.random.seed(seed)
     tf.random.set_seed(seed)
     
-    # print the seed used
-    print(f"Seed set to: {seed}")
-    
 # * PLOTTING ---
 
 # plot training and validation accuracy and loss

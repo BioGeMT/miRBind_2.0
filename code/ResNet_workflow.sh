@@ -12,6 +12,7 @@ usage() {
     echo "  small | medium | large    : Specify the ResNet type - [373,121] | [1,360,001] | [16,691,073] respectfully."
     echo "  noreg | withreg           : Specify the regularization type."
     echo "  plot_true | plot_false    : Specify whether to plot the results."
+    echo "  seed                      : Specify the random seed for reproducibility. Can be any integer."
     echo ""
     echo "Options:"
     echo "  -h, --help                : Display usage information."
@@ -68,7 +69,7 @@ print_echo ""
 
 
 # check if the script is run with two arguments
-if [ "$#" -ne 4 ]; then
+if [ "$#" -ne 5 ]; then
     print_error "Invalid number of arguments. Use -h or --help for more information."
     exit 1
 fi
@@ -114,6 +115,13 @@ elif [ "$4" == "plot_false" ]; then
     PLOT_BOOL="false"
 else
     print_error "Invalid argument: '$4' is not recognized. Allowed values: plot_true | plot_false"
+    exit 1
+fi
+
+# set seed based on user input
+SEED="$5"
+if [ -z "$SEED" ]; then
+    print_error "Invalid argument: '$5' is not recognized. Please provide a valid seed."
     exit 1
 fi
 
@@ -182,7 +190,7 @@ for dataset in $TRAINING_DATA_FILES; do
         continue
     fi
 
-    python3 $ENCODER_SCRIPT --i_file $dataset --o_prefix $TRAINING_DATASETS_PATH/$dataset_basename --column_name "$MIRNA_COL_NAME"
+    python3 $ENCODER_SCRIPT --i_file $dataset --o_prefix $TRAINING_DATASETS_PATH/$dataset_basename --column_name "$MIRNA_COL_NAME" --seed "$SEED"
     if [ $? -ne 0 ]; then
         print_error "Failed to encode training dataset '$dataset'!"
         exit 1
@@ -206,7 +214,7 @@ for dataset in $TESTING_DATA_FILES; do
         continue
     fi
 
-    python3 $ENCODER_SCRIPT --i_file $dataset --o_prefix $TESTING_DATASETS_PATH/$dataset_basename --column_name "$MIRNA_COL_NAME"
+    python3 $ENCODER_SCRIPT --i_file $dataset --o_prefix $TESTING_DATASETS_PATH/$dataset_basename --column_name "$MIRNA_COL_NAME" --seed "$SEED"
     if [ $? -ne 0 ]; then
         print_error "Failed to encode testing dataset '$dataset'!"
         exit 1
@@ -269,7 +277,7 @@ print_success "Training model... - See training logs for more details"
 print_echo ""
 
 # run the training script
-python3 "$SCRIPT_PATH" --ResNet_type "$RESNET_TYPE" --encoded_data "$TRAIN_DATA_FILES" --encoded_labels "$TRAIN_LABEL_FILES" --plot_plots "$PLOT_BOOL"
+python3 "$SCRIPT_PATH" --ResNet_type "$RESNET_TYPE" --encoded_data "$TRAIN_DATA_FILES" --encoded_labels "$TRAIN_LABEL_FILES" --plot_plots "$PLOT_BOOL" --seed "$SEED"
 
 # print success message
 if [ $? -ne 0 ]; then
@@ -333,7 +341,7 @@ print_success "Running predictions..."
 print_echo ""
 
 # run the predictions script
-python3 "$PREDICTIONS_SCRIPT" --ResNet_type "$RESNET_TYPE" --encoded_data "$TEST_DATA_FILES" --trained_models "$MODEL_FILES" --regularization "$REG_TYPE"
+python3 "$PREDICTIONS_SCRIPT" --ResNet_type "$RESNET_TYPE" --encoded_data "$TEST_DATA_FILES" --trained_models "$MODEL_FILES" --regularization "$REG_TYPE" --seed "$SEED"
 
 # print success message
 if [ $? -ne 0 ]; then
@@ -394,7 +402,7 @@ print_success "Running evaluations... - See evaluation logs for more details"
 echo ""
 
 # run the evaluations script
-python3 "$EVALUATIONS_SCRIPT" --ResNet_type "$RESNET_TYPE" --encoded_data "$TEST_DATA_FILES" --encoded_labels "$TEST_LABEL_FILES" --predictions "$PREDICTION_FILES" --regularization "$REG_TYPE" --plot_plots "$PLOT_BOOL"
+python3 "$EVALUATIONS_SCRIPT" --ResNet_type "$RESNET_TYPE" --encoded_data "$TEST_DATA_FILES" --encoded_labels "$TEST_LABEL_FILES" --predictions "$PREDICTION_FILES" --regularization "$REG_TYPE" --plot_plots "$PLOT_BOOL" --seed "$SEED"
 
 # print success message
 if [ $? -ne 0 ]; then

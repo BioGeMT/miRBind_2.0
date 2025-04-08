@@ -13,10 +13,6 @@ from helper_functions.model_utils import (set_seed,
                                           simple_sort_key, 
                                           cleanup)
 
-# * SEEDING - FOR REPRODUCIBILITY ---
-
-set_seed(42)
-
 # * LOADING DATA ---
 
 def load_data(data_file):
@@ -34,7 +30,11 @@ def main():
     parser.add_argument("-e_data", "--encoded_data", required=True, default=None, type=str, help="List of paths to encoded test datasets (.npy files) used for predictions")
     parser.add_argument("-models", "--trained_models", required=True, default=None, type=str, help="List of paths to the trained models file (.keras or equivalent)")
     parser.add_argument("-reg", "--regularization", required=True, default="NoReg", type=str, help="NoReg or WithReg using in naming the .tsv file")
+    parser.add_argument("-seed", "--seed", required=True, type=int, help="Random seed for reproducibility")
     args = parser.parse_args()
+
+    # seeding
+    set_seed(args.seed)
     
     # split model and dataset paths into lists and sort them
     test_data_files = sorted(args.encoded_data.split(','))
