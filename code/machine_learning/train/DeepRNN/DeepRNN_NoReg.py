@@ -22,11 +22,11 @@ from helper_functions.model_utils import (set_seed,
 epochs = 20  # number of epochs/dataset iterations
 batch_size = 32  # batch size
 learning_rate = 0.001  # learning rate
-results_file_path = 'Saves/DeepRNN_NoReg_training_logs.txt'
-# define the directory where you want to save the model
-save_dir = "Saves/DeepRNN_Models"
 regularizer_type = "NoReg"
 model_type = "DeepRNN"
+# define the directory where you want to save the model and training logs
+results_file_path = f"Saves_{model_type}/DeepRNN_WithReg_training_logs.txt"
+save_dir = f"Saves_{model_type}/DeepRNN_Models"
 
 list_of_large_datasets = ["AGO2_eCLIP_Manakov2022_train_dataset"]
 

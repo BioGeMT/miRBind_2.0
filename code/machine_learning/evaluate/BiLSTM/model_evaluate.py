@@ -44,12 +44,14 @@ def main():
     test_label_files = sorted(args.encoded_labels.split(','))
     prediction_files = sorted(args.predictions.split(','))
     
+    model_type = "BiLSTM"
+    
     # initialise save predictions path
-    results_file_path = f'Saves/BiLSTM_{args.regularization}_evaluation_logs.txt'
+    results_file_path = f"Saves_{model_type}/BiLSTM_{args.regularization}_evaluation_logs.txt"
     
     if args.plot_plots == 'true':
         # create directory for saving plots
-        save_dir = "Saves/BiLSTM_Evaluation"
+        save_dir = f"Saves_{model_type}/BiLSTM_Evaluation"
         make_files(os.path.split(save_dir)[0], [os.path.split(save_dir)[1]])
         
     # clear the results file
@@ -57,7 +59,6 @@ def main():
         pass
     
     count_preds = 1
-    model_type = "BiLSTM"
         
     # iterate over all test data, test label and prediction files
     for test_data, test_label, prediction in zip(test_data_files, test_label_files, prediction_files):

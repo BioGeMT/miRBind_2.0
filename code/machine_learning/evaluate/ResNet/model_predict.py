@@ -38,7 +38,7 @@ def main():
         raise ValueError(f"!!! Invalid regularization argument: {args.regularization} - Please use either 'NoReg' or 'WithReg' !!!")
 
     # initialise save predictions path
-    save_dir = "Saves/ResNet_Predictions"
+    save_dir = f"Saves_ResNet_{args.ResNet_type}/ResNet_Predictions"
     make_files(os.path.split(save_dir)[0], [os.path.split(save_dir)[1]])
     
     # select the ResBlock class based on the ResNet type

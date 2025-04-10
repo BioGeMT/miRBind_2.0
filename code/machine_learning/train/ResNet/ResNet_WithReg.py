@@ -22,9 +22,6 @@ from helper_functions.model_utils import (set_seed,
 epochs = 20  # number of epochs/dataset iterations
 batch_size = 32  # batch size
 learning_rate = 0.001  # learning rate
-results_file_path = 'Saves/ResNet_WithReg_training_logs.txt'
-# define the directory where you want to save the model
-save_dir = "Saves/ResNet_Models"
 
 list_of_large_datasets = ["AGO2_eCLIP_Manakov2022_train_dataset"]
 
@@ -61,14 +58,17 @@ def main():
     training_data_files = sorted(args.encoded_data.split(','))
     training_labels_files = sorted(args.encoded_labels.split(','))
     
+    model_type = (f"ResNet_{args.ResNet_type.lower()}")
+    # define the directory where you want to save the model and training logs
+    results_file_path = f"Saves_{model_type}/ResNet_WithReg_training_logs.txt"
+    save_dir = f"Saves_{model_type}/ResNet_Models"
+    
     # create the save directory
     make_files(os.path.split(save_dir)[0], [os.path.split(save_dir)[1]])
 
     # clear the results file
     with open(results_file_path, 'w') as results_file:
         pass
-    
-    model_type = f"ResNet_{args.ResNet_type.lower()}"
 
     # loop through all datasets
     for training_data_file, training_label_file in zip(training_data_files, training_labels_files):

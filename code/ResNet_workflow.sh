@@ -47,24 +47,18 @@ print_success() {
     echo "$msg" >> "$PATH_TO_BASH_LOG"
 }
 
-# function to print warning messages in yellow
-print_warning() {
-    local msg="[$(timestamp)] $1"
-    echo -e "\e[33m$msg\e[0m"
-    echo "$msg" >> "$PATH_TO_BASH_LOG"
-}
+# # function to print warning messages in yellow
+# print_warning() {
+#     local msg="[$(timestamp)] $1"
+#     echo -e "\e[33m$msg\e[0m"
+#     echo "$msg" >> "$PATH_TO_BASH_LOG"
+# }
 
 # function to print echo messages
 print_echo() {
     echo "$1"
     echo "$1" >> "$PATH_TO_BASH_LOG"
 }
-
-
-
-DT=$(date '+%d/%m/%Y --- %H:%M:%S')
-echo "ResNet $RESNET_TYPE with $REG_TYPE workflow started at [$DT]" > "$PATH_TO_BASH_LOG"
-print_echo ""
 
 
 
@@ -124,6 +118,12 @@ if [ -z "$SEED" ]; then
     print_error "Invalid argument: '$5' is not recognized. Please provide a valid seed."
     exit 1
 fi
+
+
+
+DT=$(date '+%d/%m/%Y --- %H:%M:%S')
+echo "ResNet $RESNET_TYPE with $REG_TYPE workflow started at [$DT]" > "$PATH_TO_BASH_LOG"
+print_echo ""
 
 
 
@@ -190,7 +190,7 @@ for dataset in $TRAINING_DATA_FILES; do
         continue
     fi
 
-    python3 $ENCODER_SCRIPT --i_file $dataset --o_prefix $TRAINING_DATASETS_PATH/$dataset_basename --column_name "$MIRNA_COL_NAME" --seed "$SEED"
+    python3 $ENCODER_SCRIPT --i_file $dataset --o_prefix $TRAINING_DATASETS_PATH/$dataset_basename --column_name "$MIRNA_COL_NAME"
     if [ $? -ne 0 ]; then
         print_error "Failed to encode training dataset '$dataset'!"
         exit 1
@@ -214,7 +214,7 @@ for dataset in $TESTING_DATA_FILES; do
         continue
     fi
 
-    python3 $ENCODER_SCRIPT --i_file $dataset --o_prefix $TESTING_DATASETS_PATH/$dataset_basename --column_name "$MIRNA_COL_NAME" --seed "$SEED"
+    python3 $ENCODER_SCRIPT --i_file $dataset --o_prefix $TESTING_DATASETS_PATH/$dataset_basename --column_name "$MIRNA_COL_NAME"
     if [ $? -ne 0 ]; then
         print_error "Failed to encode testing dataset '$dataset'!"
         exit 1
@@ -299,7 +299,7 @@ if [ ! -d "$TESTING_DATASETS_PATH" ]; then
     exit 1
 fi
 
-SAVED_MODELS_PATH="Saves/ResNet_Models"
+SAVED_MODELS_PATH="Saves_ResNet_$RESNET_TYPE/ResNet_Models"
 PREDICTIONS_SCRIPT="code/machine_learning/evaluate/ResNet/model_predict.py"
 
 # ensure model dir exists
@@ -358,7 +358,7 @@ print_echo ""
 # testing_datasets.npy, testing_labels.npy, -preds, -models are required
 # (-plots is optional)
 
-SAVED_PREDICTIONS_PATH="Saves/ResNet_Predictions"
+SAVED_PREDICTIONS_PATH="Saves_ResNet_$RESNET_TYPE/ResNet_Predictions"
 EVALUATIONS_SCRIPT="code/machine_learning/evaluate/ResNet/model_evaluate.py"
 
 # ensure predictions dir exists
@@ -414,8 +414,7 @@ print_echo ""
 print_success "Evaluations obtained successfully"
 print_echo ""
 print_success "ResNet $RESNET_TYPE with $REG_TYPE pipeline completed successfully"
-print_warning "NOTE: Please remove, rename or move the 'Saves' directory to avoid conflicts with future runs"
 
-mv "$PATH_TO_BASH_LOG" "Saves/"
+mv "$PATH_TO_BASH_LOG" "Saves_ResNet_$RESNET_TYPE/"
 
 exit 0
