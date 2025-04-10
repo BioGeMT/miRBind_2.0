@@ -39,7 +39,7 @@ python hyperparam_optimization/hyperparam_optimization.py \
   --epochs 5
   
 # evaluate the best model
-python hyperparam_optimization/evaluate_model.py \
+python $CODE/evaluate/evaluate_model.py \
   --model-path $best_model_path \
   --dataset-test "../${test_file_out}_dataset.npy" \
   --labels-test "../${test_file_out}_labels.npy" \
@@ -48,7 +48,7 @@ python hyperparam_optimization/evaluate_model.py \
   --save-plots \
   --output-dir $evaluation_out_dir
 
-python hyperparam_optimization/evaluate_model.py \
+python $CODE/evaluate/evaluate_model.py \
   --model-path $best_model_path \
   --dataset-test "../${leftout_file_out}_dataset.npy" \
   --labels-test "../${leftout_file_out}_labels.npy" \

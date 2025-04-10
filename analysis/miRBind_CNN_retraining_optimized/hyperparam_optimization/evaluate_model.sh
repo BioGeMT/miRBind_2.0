@@ -9,7 +9,7 @@ model_name="mirBind_${timestamp}"
 best_model_path="evaluation_results/${model_name}/${model_name}_final.keras"
 evaluation_out_dir="evaluation_results/${model_name}"
 
-python evaluate_model.py \
+python ../../../code/machine_learning/evaluate/evaluate_model.py \
   --model-path $best_model_path \
   --dataset-test "../${test_file_out}_dataset.npy" \
   --labels-test "../${test_file_out}_labels.npy" \
@@ -18,7 +18,7 @@ python evaluate_model.py \
   --save-plots \
   --output-dir $evaluation_out_dir
 
-python evaluate_model.py \
+python ../../../code/machine_learning/evaluate/evaluate_model.py \
   --model-path $best_model_path \
   --dataset-test "../${leftout_file_out}_dataset.npy" \
   --labels-test "../${leftout_file_out}_labels.npy" \

@@ -10,8 +10,8 @@ from tensorflow.keras.utils import Sequence
 import tensorflow as tf
 import random
 
-from utils import set_seeds, compile_model
-from data_generators import TrainDataGenerator
+from code.machine_learning.utils import set_seeds, compile_model
+from code.machine_learning.data_generators import TrainDataGenerator
 import sys
 sys.path.append("../../../code/machine_learning/train/CNN_miRBind_2022/") 
 from miRBind_CNN_architecture import miRBind_CNN

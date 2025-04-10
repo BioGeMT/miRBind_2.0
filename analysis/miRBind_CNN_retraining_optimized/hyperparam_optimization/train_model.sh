@@ -8,7 +8,9 @@ out_dir="evaluation_results/${model_name}"
 train_file="encoded_dataset/Manakov2022_flat/AGO2_eCLIP_Manakov2022_train"
 train_file_size=2516195
 
-python train_model.py \
+CODE="../../code/machine_learning"
+
+python $CODE/train/train_model.py \
   --dataset-train "../${train_file}_dataset.npy" \
   --labels-train "../${train_file}_labels.npy" \
   --dataset-size $train_file_size \

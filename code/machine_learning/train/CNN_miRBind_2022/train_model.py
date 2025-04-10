@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 from utils import set_seeds, setup_logger, compile_model
 from plots import plot_training_history
-from data_generators import TrainDataGenerator
+from code.machine_learning.data_generators import TrainDataGenerator
 sys.path.append("../../../code/machine_learning/train/CNN_miRBind_2022/") 
 from miRBind_CNN_architecture import miRBind_CNN
 

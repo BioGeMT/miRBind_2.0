@@ -45,7 +45,7 @@ class TestDataGenerator:
         if dataset_size is None:
             # Try to determine the dataset size by checking file properties
             try:
-                # First approach: try to load just the header to get shape and dtype
+                # try to load just the header to get shape and dtype
                 with open(data_path, 'rb') as f:
                     if f.read(6) == b'\x93NUMPY':
                         # This is a standard numpy file, we can get info from header
@@ -58,7 +58,7 @@ class TestDataGenerator:
                         # Not a standard numpy file, we'll try other methods
                         raise ValueError("Not a standard numpy file")
             except:
-                # Second approach: try to infer from file size
+                # try to infer from file size
                 # This assumes the files are memory-mapped in a specific format
                 # For dataset: shape=(n, 50, 20, 1), dtype=float32 (4 bytes)
                 # For labels: shape=(n,), dtype=float32 (4 bytes)

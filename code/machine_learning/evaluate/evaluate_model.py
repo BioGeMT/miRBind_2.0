@@ -5,7 +5,7 @@ import numpy as np
 from tensorflow import keras as K
 from sklearn.metrics import precision_recall_curve, auc, roc_curve, roc_auc_score, accuracy_score, average_precision_score
 
-from data_generators import TestDataGenerator
+from code.machine_learning.data_generators import TestDataGenerator
 from plots import plot_roc_curve, plot_pr_curve
 from utils import setup_logger
 
