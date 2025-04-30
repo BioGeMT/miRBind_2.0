@@ -24,9 +24,6 @@ epochs = 20  # number of epochs/dataset iterations
 batch_size = 32  # batch size
 learning_rate = 0.001  # learning rate
 model_type = "BiLSTM"
-# define the directory where you want to save the model and training logs
-results_file_path = f"Saves_{model_type}/BiLSTM_WithReg_training_logs.txt"
-save_dir = f"Saves_{model_type}/BiLSTM_Models"
 
 list_of_large_datasets = ["AGO2_eCLIP_Manakov2022_train_dataset"]
 
@@ -59,8 +56,9 @@ def main():
     parser = argparse.ArgumentParser(description="Train a BiLSTM model for miRNA-mRNA target site classification")
     parser.add_argument("-e_data", "--encoded_data", required=True, type=str, help="Path to the encoded training dataset (.npy file)")
     parser.add_argument("-e_labels", "--encoded_labels", required=True, type=str, help="Path to the encoded training labels (.npy file)")
+    parser.add_argument("-reg", "--regularization", required=True, type=str, help="NoReg or WithReg")
     parser.add_argument("-plots", "--plot_plots", required=True, type=str, help="Whether to save the training plots or not (true/false)")
-    parser.add_argument("-seed", "--seed", required=True, type=int, help="Random seed for reproducibility")
+    parser.add_argument("-s", "--seed", required=True, type=int, help="Random seed for reproducibility")
     args = parser.parse_args()
 
     # seeding
@@ -70,6 +68,10 @@ def main():
     # sorting the model and dataset paths and split them into lists
     training_data_files = sorted(args.encoded_data.split(','))
     training_labels_files = sorted(args.encoded_labels.split(','))
+    
+    # define the directory where you want to save the model and training logs
+    results_file_path = f"Saves_{model_type}_{args.regregularization}/BiLSTM_WithReg_training_logs.txt"
+    save_dir = f"Saves_{model_type}_{args.regregularization}/BiLSTM_Models"
     
     # create the save directory
     make_files(os.path.split(save_dir)[0], [os.path.split(save_dir)[1]])
@@ -135,11 +137,11 @@ def main():
                     model = BiLSTM(input_shape, dropout_rate, learning_rate, reg_factor, regularizers[regularizer_type])
                     
                     # train the model on folds
-                    model, history, elapsed_training_time, metrics = train_model(model, epochs, batch_size, 
-                                                                                 X_train, y_train, model_type,
-                                                                                 dataset_name, regularizer_type,
-                                                                                 dropout_rate, save_dir, args, reg_factor, 
-                                                                                 val_data=X_val, val_labels=y_val)
+                    model, elapsed_training_time, metrics = train_model(model, epochs, batch_size, 
+                                                                        X_train, y_train, model_type,
+                                                                        dataset_name, regularizer_type,
+                                                                        dropout_rate, save_dir, args, reg_factor, 
+                                                                        val_data=X_val, val_labels=y_val)
 
                     with open(results_file_path, 'a') as results_file:
                         results_file.write(f"\nFold {fold_count} | Time taken for training with, regularizer: {regularizer_type}, reg_factor: {reg_factor}, dropout_rate: {dropout_rate} | {(elapsed_training_time):.3f} s")
@@ -152,7 +154,7 @@ def main():
                     cv_precisions.append(metrics['precision'])
                     cv_recalls.append(metrics['recall'])
                 
-                    del elapsed_training_time, X_train, y_train, X_val, y_val, model, history
+                    del elapsed_training_time, X_train, y_train, X_val, y_val, model, metrics
                     cleanup()    
                 
                 calculate_avg_std(cv_accuracies, cv_losses, cv_f1s, cv_precisions, cv_recalls, dropout_rate, regularizer_type, results_file_path, config_results, reg_factor)
@@ -188,14 +190,14 @@ def main():
             final_model = BiLSTM(input_shape, best_config['dropout_rate'], learning_rate, best_config['reg_factor'], regularizers[best_config['regularizer_type']])
             
             # train final model (using validation_split here)
-            final_model, _, _, _ = train_model(final_model, epochs, batch_size,
-                                               encoded_data, encoded_labels, model_type,
-                                               dataset_name, best_config['regularizer_type'], 
-                                               best_config['dropout_rate'], save_dir, args, best_config['reg_factor'])
+            final_model, _, _ = train_model(final_model, epochs, batch_size,
+                                            encoded_data, encoded_labels, model_type,
+                                            dataset_name, best_config['regularizer_type'], 
+                                            best_config['dropout_rate'], save_dir, args, best_config['reg_factor'])
             
             # save the final model
             save_model(final_model, save_dir, model_type, best_config['regularizer_type'], dataset_name, best_config['dropout_rate'], best_config['reg_factor'])
-            print("\n----- Final Model Trained and Saved -----\n")
+            print("----- Final Model Trained and Saved -----\n")
         else:
             print("\n!!! No configurations found !!!")
 
@@ -203,7 +205,7 @@ def main():
         with open(results_file_path, 'a') as results_file:
             results_file.write("\n--- Done ---")
         
-        print(f"\nResults saved to {results_file_path}")
+        print(f"Results saved to {results_file_path}\n")
         
         del encoded_data, encoded_labels, final_model, config_results, best_config
         cleanup()

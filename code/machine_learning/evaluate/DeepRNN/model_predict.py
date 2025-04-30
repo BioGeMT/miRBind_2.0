@@ -27,10 +27,10 @@ def load_data(data_file):
 def main():
     # argument parser for dataset path and learning rate
     parser = argparse.ArgumentParser(description="Load trained model to make predictions for miRNA-mRNA target site classification")
-    parser.add_argument("-e_data", "--encoded_data", required=True, default=None, type=str, help="List of paths to encoded test datasets (.npy files) used for predictions")
-    parser.add_argument("-models", "--trained_models", required=True, default=None, type=str, help="List of paths to the trained models file (.keras or equivalent)")
-    parser.add_argument("-reg", "--regularization", required=True, default="NoReg", type=str, help="NoReg or WithReg using in naming the .tsv file")
-    parser.add_argument("-seed", "--seed", required=True, type=int, help="Random seed for reproducibility")
+    parser.add_argument("-e_data", "--encoded_data", required=True, type=str, help="List of paths to encoded test datasets (.npy files) used for predictions")
+    parser.add_argument("-models", "--trained_models", required=True, type=str, help="List of paths to the trained models file (.keras or equivalent)")
+    parser.add_argument("-reg", "--regularization", required=True, type=str, help="NoReg or WithReg using in naming the .tsv file")
+    parser.add_argument("-s", "--seed", required=True, type=int, help="Random seed for reproducibility")
     args = parser.parse_args()
 
     # seeding
@@ -45,7 +45,7 @@ def main():
         raise ValueError(f"!!! Invalid regularization argument: {args.regularization} - Please use either 'NoReg' or 'WithReg' !!!")
 
     # initialise save predictions path
-    save_dir = "Saves_DeepRNN/DeepRNN_Predictions"
+    save_dir = f"Saves_DeepRNN_{args.regularization}/DeepRNN_Predictions"
     make_files(os.path.split(save_dir)[0], [os.path.split(save_dir)[1]])
     
     count = 1

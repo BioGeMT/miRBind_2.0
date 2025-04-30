@@ -6,7 +6,7 @@ import os
 import argparse
 import pandas as pd
 from tensorflow.keras.models import load_model
-from machine_learning.train.ResNet.ResNet_Architectures import ResBlock_SmallAndMedium, ResBlock_Large
+from machine_learning.train.ResNet.ResNet_Architectures import ResBlock
 from helper_functions.model_utils import (set_seed,
                                           load_data, 
                                           make_files,
@@ -19,11 +19,11 @@ from helper_functions.model_utils import (set_seed,
 def main():
     # argument parser for dataset path and learning rate
     parser = argparse.ArgumentParser(description="Load trained model to make predictions for miRNA-mRNA target site classification")
-    parser.add_argument("-rn_type", "--ResNet_type", required=True, default=None, type=str, help="Type of ResNet model to train (small [373,121], medium [1,360,001], large [16,691,073])")
-    parser.add_argument("-e_data", "--encoded_data", required=True, default=None, type=str, help="List of paths to encoded test datasets (.npy files) used for predictions")
-    parser.add_argument("-models", "--trained_models", required=True, default=None, type=str, help="List of paths to the trained models file (.keras or equivalent)")
-    parser.add_argument("-reg", "--regularization", required=True, default="NoReg", type=str, help="NoReg or WithReg using in naming the .tsv file")
-    parser.add_argument("-seed", "--seed", required=True, type=int, help="Random seed for reproducibility")
+    parser.add_argument("-rn_type", "--ResNet_type", required=True, type=str, help="Type of ResNet model to train (small [373,121], medium [1,360,001], large [16,691,073])")
+    parser.add_argument("-e_data", "--encoded_data", required=True, type=str, help="List of paths to encoded test datasets (.npy files) used for predictions")
+    parser.add_argument("-models", "--trained_models", required=True, type=str, help="List of paths to the trained models file (.keras or equivalent)")
+    parser.add_argument("-reg", "--regularization", required=True, type=str, help="NoReg or WithReg using in naming the .tsv file")
+    parser.add_argument("-s", "--seed", required=True, type=int, help="Random seed for reproducibility")
     args = parser.parse_args()
 
     # seeding
@@ -38,14 +38,8 @@ def main():
         raise ValueError(f"!!! Invalid regularization argument: {args.regularization} - Please use either 'NoReg' or 'WithReg' !!!")
 
     # initialise save predictions path
-    save_dir = f"Saves_ResNet_{args.ResNet_type}/ResNet_Predictions"
+    save_dir = f"Saves_ResNet_{args.ResNet_type}_{args.regularization}/ResNet_Predictions"
     make_files(os.path.split(save_dir)[0], [os.path.split(save_dir)[1]])
-    
-    # select the ResBlock class based on the ResNet type
-    if args.ResNet_type == 'small' or args.ResNet_type == 'medium':
-        RESBLOCK_CLASS = ResBlock_SmallAndMedium
-    elif args.ResNet_type == 'large':
-        RESBLOCK_CLASS = ResBlock_Large
     
     count = 1
     
@@ -79,7 +73,7 @@ def main():
 
             # load mdel using custom_objects to load the ResBlock class
             print(f"Loading model: {model_path} ...")
-            model = load_model(model_path, custom_objects={'ResBlock': RESBLOCK_CLASS})
+            model = load_model(model_path, custom_objects={'ResBlock': ResBlock})
             
             # get predictions
             predictions = model.predict(encoded_test_data).flatten()

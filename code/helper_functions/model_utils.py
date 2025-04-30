@@ -81,8 +81,8 @@ def plot_roc_crossval(labels, predictions, model_type, save_dir, model_name, cou
     plt.title(f'{model_type} - ROC Curve - {model_name}')
     plt.legend(loc="lower right")
     plt.grid(alpha=0.3)
-
     plt.tight_layout()
+    
     plot_filename = f'{os.path.splitext(model_name)[0]}_plot{count_plots}_pred{count_preds}_ROC.png'
     plt.savefig(os.path.join(save_dir, plot_filename))
     plt.close('all')
@@ -106,8 +106,8 @@ def plot_pr_crossval(labels, predictions, model_type, save_dir, model_name, coun
     plt.title(f'{model_type} - PR Curve - {model_name}')
     plt.legend(loc="lower left")
     plt.grid(alpha=0.3)
-    
     plt.tight_layout()
+    
     plot_filename = f'{os.path.splitext(model_name)[0]}_plot{count_plots}_pred{count_preds}_PR.png'
     plt.savefig(os.path.join(save_dir, plot_filename))
     plt.close('all')
@@ -293,8 +293,12 @@ def train_model(model, epochs, batch_size, training_data, training_labels, model
     elif args.plot_plots.lower() not in ["true", "false"]:
         raise ValueError("!!! Invalid input for -plots. Only 'true' or 'false' are allowed !!!")
     
+    # remove history to free up memory after plotting
+    del history
+    cleanup()
+    
     # return model and history
-    return model, history, elapsed_training_timer, metrics_dict
+    return model, elapsed_training_timer, metrics_dict
 
 # * SUBSETTING TRAINING DATASETS ---
 
@@ -324,12 +328,12 @@ def save_model(model, save_dir, model_type, regularizer_type, dataset_name, drop
         model_path = os.path.join(save_dir, f"{model_type}_{regularizer_type}_{dataset_name}_dr{dropout_rate}.keras")
         
     model.save(model_path)
-    print("----- <Model Saved Successfully> -----\n\n")
+    print("----- <Model Saved Successfully> -----\n")
     
 # * CLEANUP ---
 
 def cleanup():
-    # invoke garbage collection
-    gc.collect()
     # clear session backend 
     tf.keras.backend.clear_session()
+    # invoke garbage collection
+    gc.collect()

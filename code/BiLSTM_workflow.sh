@@ -4,7 +4,7 @@
 
 # function to display usage information
 usage() {
-    echo "Usage: $0 [noreg | withreg] [plot_true | plot_false]"
+    echo "Usage: $0 [noncodingRNA | miRNA] [noreg | withreg] [plot_true | plot_false] [seed]"
     echo ""
     echo "Arguments:"
     echo "  noncodingRNA | miRNA      : Specify the micro-rna column name. Allowed values: noncodingRNA | miRNA"
@@ -46,12 +46,12 @@ print_success() {
     echo "$msg" >> "$PATH_TO_BASH_LOG"
 }
 
-# # function to print warning messages in yellow
-# print_warning() {
-#     local msg="[$(timestamp)] $1"
-#     echo -e "\e[33m$msg\e[0m"
-#     echo "$msg" >> "$PATH_TO_BASH_LOG"
-# }
+# function to print warning messages in yellow
+print_warning() {
+    local msg="[$(timestamp)] $1"
+    echo -e "\e[33m$msg\e[0m"
+    echo "$msg" >> "$PATH_TO_BASH_LOG"
+}
 
 # function to print echo messages
 print_echo() {
@@ -177,8 +177,13 @@ for dataset in $TRAINING_DATA_FILES; do
         continue
     fi
 
-    python3 $ENCODER_SCRIPT --i_file $dataset --o_prefix $TRAINING_DATASETS_PATH/$dataset_basename --column_name "$MIRNA_COL_NAME"
-    if [ $? -ne 0 ]; then
+    python3 "$ENCODER_SCRIPT" \
+        --i_file "$dataset" \
+        --o_prefix "$TRAINING_DATASETS_PATH/$dataset_basename" \
+        --column_name "$MIRNA_COL_NAME"
+    
+    PYTHON_EXIT_CODE=$?
+    if [ $PYTHON_EXIT_CODE -ne 0 ]; then
         print_error "Failed to encode training dataset '$dataset'!"
         exit 1
     fi
@@ -201,8 +206,13 @@ for dataset in $TESTING_DATA_FILES; do
         continue
     fi
 
-    python3 $ENCODER_SCRIPT --i_file $dataset --o_prefix $TESTING_DATASETS_PATH/$dataset_basename --column_name "$MIRNA_COL_NAME"
-    if [ $? -ne 0 ]; then
+    python3 "$ENCODER_SCRIPT" \
+        --i_file "$dataset" \
+        --o_prefix "$TESTING_DATASETS_PATH/$dataset_basename" \
+        --column_name "$MIRNA_COL_NAME"
+    
+    PYTHON_EXIT_CODE=$?
+    if [ $PYTHON_EXIT_CODE -ne 0 ]; then
         print_error "Failed to encode testing dataset '$dataset'!"
         exit 1
     fi
@@ -226,7 +236,7 @@ if [ ! -f "$SCRIPT_PATH" ]; then
 fi
 
 # output message if script is found and skip line
-SCRIPT_BASENAME=$(basename "$SCRIPT_PATH")
+TRAINING_SCRIPT_BASENAME=$(basename "$SCRIPT_PATH")
 print_success "Found Training Script: $TRAINING_SCRIPT_BASENAME"
 print_success "Selected plot bool: $PLOT_BOOL"
 print_success "Proceeding with execution..."
@@ -234,7 +244,7 @@ print_echo ""
 
 # ensure training directory exist
 if [ ! -d "$TRAINING_DATASETS_PATH" ]; then
-    print_error "Testing dataset directory '$TRAINING_DATASETS_PATH' not found!"
+    print_error "Training dataset directory '$TRAINING_DATASETS_PATH' not found!"
     exit 1
 fi
 
@@ -262,10 +272,16 @@ print_success "Training model... - See training logs for more details"
 print_echo ""
 
 # run the training script
-python3 "$SCRIPT_PATH" --encoded_data "$TRAIN_DATA_FILES" --encoded_labels "$TRAIN_LABEL_FILES" --plot_plots "$PLOT_BOOL" --seed "$SEED"
+python3 "$SCRIPT_PATH" \
+    --encoded_data "$TRAIN_DATA_FILES" \
+    --encoded_labels "$TRAIN_LABEL_FILES" \
+    --regularization "$REG_TYPE" \
+    --plot_plots "$PLOT_BOOL" \
+    --seed "$SEED"
 
 # print success message
-if [ $? -ne 0 ]; then
+PYTHON_EXIT_CODE=$?
+if [ $PYTHON_EXIT_CODE -ne 0 ]; then
     print_error "Failed to train model!"
     exit 1 # comment out to continue with the rest of the script when debugging locally
 fi
@@ -284,7 +300,7 @@ if [ ! -d "$TESTING_DATASETS_PATH" ]; then
     exit 1
 fi
 
-SAVED_MODELS_PATH="Saves_BiLSTM/BiLSTM_Models"
+SAVED_MODELS_PATH="Saves_BiLSTM_${REG_TYPE}/BiLSTM_Models"
 PREDICTIONS_SCRIPT="code/machine_learning/evaluate/BiLSTM/model_predict.py"
 
 # ensure model dir exists
@@ -326,10 +342,15 @@ print_success "Running predictions..."
 print_echo ""
 
 # run the predictions script
-python3 "$PREDICTIONS_SCRIPT" --encoded_data "$TEST_DATA_FILES" --trained_models "$MODEL_FILES" --regularization "$REG_TYPE" --seed "$SEED"
+python3 "$PREDICTIONS_SCRIPT" \
+    --encoded_data "$TEST_DATA_FILES" \
+    --trained_models "$MODEL_FILES" \
+    --regularization "$REG_TYPE" \
+    --seed "$SEED"
 
 # print success message
-if [ $? -ne 0 ]; then
+PYTHON_EXIT_CODE=$?
+if [ $PYTHON_EXIT_CODE -ne 0 ]; then
     print_error "Failed to generate predictions"
     exit 1
 fi
@@ -343,7 +364,7 @@ print_echo ""
 # testing_datasets.npy, testing_labels.npy, -preds, -models are required
 # (-plots is optional)
 
-SAVED_PREDICTIONS_PATH="Saves_BiLSTM/BiLSTM_Predictions"
+SAVED_PREDICTIONS_PATH="Saves_BiLSTM_${REG_TYPE}/BiLSTM_Predictions"
 EVALUATIONS_SCRIPT="code/machine_learning/evaluate/BiLSTM/model_evaluate.py"
 
 # ensure predictions dir exists
@@ -387,10 +408,17 @@ print_success "Running evaluations... - See evaluation logs for more details"
 echo ""
 
 # run the evaluations script
-python3 "$EVALUATIONS_SCRIPT" --encoded_data "$TEST_DATA_FILES" --encoded_labels "$TEST_LABEL_FILES" --predictions "$PREDICTION_FILES" --regularization "$REG_TYPE" --plot_plots "$PLOT_BOOL" --seed "$SEED"
+python3 "$EVALUATIONS_SCRIPT" \
+    --encoded_data "$TEST_DATA_FILES" \
+    --encoded_labels "$TEST_LABEL_FILES" \
+    --predictions "$PREDICTION_FILES" \
+    --regularization "$REG_TYPE" \
+    --plot_plots "$PLOT_BOOL" \
+    --seed "$SEED"
 
 # print success message
-if [ $? -ne 0 ]; then
+PYTHON_EXIT_CODE=$?
+if [ $PYTHON_EXIT_CODE -ne 0 ]; then
     print_error "Failed to evaluate model!"
     exit 1
 fi
@@ -400,6 +428,11 @@ print_success "Evaluations obtained successfully"
 print_echo ""
 print_success "BiLSTM $REG_TYPE pipeline completed successfully"
 
-mv "$PATH_TO_BASH_LOG" "Saves_BiLSTM/"
+# print warning message
+print_echo ""
+print_warning "WARNING: Before rerunning, please rename or move the existing save directories. Otherwise, they will be overwritten."
+
+# move bash log to the save directory
+mv "$PATH_TO_BASH_LOG" "Saves_BiLSTM_${REG_TYPE}/"
 
 exit 0
