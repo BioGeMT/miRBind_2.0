@@ -1,6 +1,14 @@
 from tensorflow.keras import layers, models
 from tensorflow.keras.utils import register_keras_serializable
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.regularizers import L1, L2, L1L2
+
+# map string names back to classes
+REGULARIZER_MAP = {
+    "L1": L1,
+    "L2": L2,
+    "L1L2": L1L2,
+}
     
 # defining a custom Keras layer which inturn implements a residual block for large ResNet
 @register_keras_serializable()
@@ -29,8 +37,12 @@ class ResBlock(layers.Layer):
         self.reg_factor = reg_factor
         self.regularizer_type = regularizer_type
         
-        # get the regularizer if it is not None
-        reg = regularizer_type(reg_factor) if (reg_factor is not None and regularizer_type is not None) else None
+        # convert string to class if needed
+        reg_type = regularizer_type
+        if isinstance(regularizer_type, str):
+            reg_type = REGULARIZER_MAP.get(regularizer_type, None)
+
+        reg = reg_type(reg_factor) if (reg_factor is not None and reg_type is not None) else None
 
         # initialize first convolution layer, with stride 1 or 2 depending on downsampling
         self.conv1 = layers.Conv2D(kernel_size=self.kernel_size,
@@ -112,7 +124,7 @@ class ResBlock(layers.Layer):
             'kernel_size':  self.kernel_size,
             'downsample':   self.downsample,
             'reg_factor':   self.reg_factor,
-            'regularizer_type': (self.regularizer_type.__name__ if self.regularizer_type else None)
+            'regularizer_type': self.regularizer_type,
         })
         return base_config
 
@@ -203,7 +215,8 @@ def build_resnet_large(input_shape, dropout_rate, learning_rate, reg_factor=None
     # add ResBlocks
     x = ResBlock(downsample=False, filters=64, reg_factor=reg_factor, regularizer_type=regularizer_type)(x)
     x = ResBlock(downsample=True, filters=128, reg_factor=reg_factor, regularizer_type=regularizer_type)(x)
-    x = ResBlock(downsample=True, filters=128, reg_factor=reg_factor, regularizer_type=regularizer_type)(x)
+    #! commenting out this line will result in a ResNet of 16,691,585 total trainable parameters
+    x = ResBlock(downsample=True, filters=128, reg_factor=reg_factor, regularizer_type=regularizer_type)(x) 
 
     # flatten and add dense layers
     x = layers.Flatten()(x)

@@ -70,8 +70,8 @@ def main():
     training_labels_files = sorted(args.encoded_labels.split(','))
     
     # define the directory where you want to save the model and training logs
-    results_file_path = f"Saves_{model_type}_{args.regregularization}/BiLSTM_WithReg_training_logs.txt"
-    save_dir = f"Saves_{model_type}_{args.regregularization}/BiLSTM_Models"
+    results_file_path = f"Saves_{model_type}_{args.regularization}/BiLSTM_WithReg_training_logs.txt"
+    save_dir = f"Saves_{model_type}_{args.regularization}/BiLSTM_Models"
     
     # create the save directory
     make_files(os.path.split(save_dir)[0], [os.path.split(save_dir)[1]])

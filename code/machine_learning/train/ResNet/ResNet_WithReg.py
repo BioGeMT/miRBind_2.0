@@ -126,11 +126,11 @@ def main():
             
                     # build model
                     if args.ResNet_type.lower() == "small":
-                        model = build_resnet_small(input_shape, dropout_rate, learning_rate, reg_factor, regularizers[regularizer_type])
+                        model = build_resnet_small(input_shape, dropout_rate, learning_rate, reg_factor, regularizer_type)
                     elif args.ResNet_type.lower() == "medium":
-                        model = build_resnet_medium(input_shape, dropout_rate, learning_rate, reg_factor, regularizers[regularizer_type])
+                        model = build_resnet_medium(input_shape, dropout_rate, learning_rate, reg_factor, regularizer_type)
                     elif args.ResNet_type.lower() == "large":
-                        model = build_resnet_large(input_shape, dropout_rate, learning_rate, reg_factor, regularizers[regularizer_type])
+                        model = build_resnet_large(input_shape, dropout_rate, learning_rate, reg_factor, regularizer_type)
                     else:
                         raise ValueError("!!! Invalid ResNet type. Only 'small', 'medium', or 'large' are recognised !!!")
                     
@@ -186,11 +186,11 @@ def main():
             input_shape = encoded_data.shape[1:]
             
             if args.ResNet_type.lower() == "small":
-                final_model = build_resnet_small(input_shape, best_config['dropout_rate'], learning_rate, best_config['reg_factor'], regularizers[best_config['regularizer_type']])
+                final_model = build_resnet_small(input_shape, best_config['dropout_rate'], learning_rate, best_config['reg_factor'], best_config['regularizer_type'])
             elif args.ResNet_type.lower() == "medium":
-                final_model = build_resnet_medium(input_shape, best_config['dropout_rate'], learning_rate, best_config['reg_factor'], regularizers[best_config['regularizer_type']])
+                final_model = build_resnet_medium(input_shape, best_config['dropout_rate'], learning_rate, best_config['reg_factor'], best_config['regularizer_type'])
             elif args.ResNet_type.lower() == "large":
-                final_model = build_resnet_large(input_shape, best_config['dropout_rate'], learning_rate, best_config['reg_factor'], regularizers[best_config['regularizer_type']])
+                final_model = build_resnet_large(input_shape, best_config['dropout_rate'], learning_rate, best_config['reg_factor'], best_config['regularizer_type'])
             else:
                 raise ValueError("!!! Invalid ResNet type. Only 'small', 'medium', or 'large' are recognised !!!")
             
