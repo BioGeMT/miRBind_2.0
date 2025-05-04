@@ -61,7 +61,7 @@ def main():
     
     model_type = (f"ResNet_{args.ResNet_type}")
     # define the directory where you want to save the model and training logs
-    results_file_path = f"Saves_{model_type}_{args.regularization}/ResNet_WithReg_training_logs.txt"
+    results_file_path = f"Saves_{model_type}_{args.regularization}/ResNet_{args.regularization}_training_logs.txt"
     save_dir = f"Saves_{model_type}_{args.regularization}/ResNet_Models"
     
     # create the save directory

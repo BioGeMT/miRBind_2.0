@@ -65,7 +65,7 @@ def main():
     regularizer_type = args.regularization
     
     # define the directory where you want to save the model and training logs
-    results_file_path = f"Saves_{model_type}_{regularizer_type}/BiLSTM_WithReg_training_logs.txt"
+    results_file_path = f"Saves_{model_type}_{regularizer_type}/BiLSTM_{regularizer_type}_training_logs.txt"
     save_dir = f"Saves_{model_type}_{regularizer_type}/BiLSTM_Models"
     
     # create the save directory
