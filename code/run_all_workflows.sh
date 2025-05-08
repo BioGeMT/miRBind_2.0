@@ -15,10 +15,10 @@ for SIZE in small medium large; do
   done
 done
 
-# DeepRNN, with and without regularization - 2 models in total
+# DeepGRU, with and without regularization - 2 models in total
 for REG in noreg withreg; do
-  echo ">>> Running DeepRNN: reg=${REG}"
-  code/DeepRNN_workflow.sh "$REG_TYPE" "$REG" "$PLOT_FLAG" "$SEED"
+  echo ">>> Running DeepGRU: reg=${REG}"
+  code/DeepGRU_workflow.sh "$REG_TYPE" "$REG" "$PLOT_FLAG" "$SEED"
 done
 
 # BiLSTM, with and without regularization - 2 models in total

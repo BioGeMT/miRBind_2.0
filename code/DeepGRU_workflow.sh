@@ -26,7 +26,7 @@ fi
 
 
 # * START WORKFLOW ---
-PATH_TO_BASH_LOG="DeepRNN_Bash_Logs.txt"
+PATH_TO_BASH_LOG="DeepGRU_Bash_Logs.txt"
 
 timestamp() {
     date '+%H:%M:%S'
@@ -80,10 +80,10 @@ fi
 # set the training script based on user input
 if [ "$2" == "noreg" ]; then
     REG_TYPE="NoReg"
-    TRAIN_SCRIPT="DeepRNN_NoReg.py"
+    TRAIN_SCRIPT="DeepGRU_NoReg.py"
 elif [ "$2" == "withreg" ]; then
     REG_TYPE="WithReg"
-    TRAIN_SCRIPT="DeepRNN_WithReg.py"
+    TRAIN_SCRIPT="DeepGRU_WithReg.py"
 else
     print_error "Invalid argument: '$2' is not recognized. Allowed values: noreg | withreg"
     exit 1
@@ -109,7 +109,7 @@ fi
 
 
 DT=$(date '+%d/%m/%Y --- %H:%M:%S')
-echo "DeepRNN with $REG_TYPE workflow started at [$DT]" > "$PATH_TO_BASH_LOG"
+echo "DeepGRU with $REG_TYPE workflow started at [$DT]" > "$PATH_TO_BASH_LOG"
 print_echo ""
 
 
@@ -117,8 +117,8 @@ print_echo ""
 # * ENCODE ---
 # datasets, prefix, miRNA column_name are required
 
-TRAINING_DATASETS_PATH="data/DeepRNN_data/training"
-TESTING_DATASETS_PATH="data/DeepRNN_data/testing"
+TRAINING_DATASETS_PATH="data/DeepGRU_data/training"
+TESTING_DATASETS_PATH="data/DeepGRU_data/testing"
 ENCODER_SCRIPT="code/machine_learning/encode/sequence_encoder_16ntPairs.py"
 
 # ensure training and testing directories exist
@@ -229,7 +229,7 @@ print_echo ""
 # (-plots and -lr [learning rate] are optional)
 
 # ensure script exists before attempting to execute it
-SCRIPT_PATH="code/machine_learning/train/DeepRNN/$TRAIN_SCRIPT"
+SCRIPT_PATH="code/machine_learning/train/DeepGRU/$TRAIN_SCRIPT"
 if [ ! -f "$SCRIPT_PATH" ]; then
     print_error "Training script '$SCRIPT_PATH' not found!"
     exit 1
@@ -300,8 +300,8 @@ if [ ! -d "$TESTING_DATASETS_PATH" ]; then
     exit 1
 fi
 
-SAVED_MODELS_PATH="Saves_DeepRNN_${REG_TYPE}/DeepRNN_Models"
-PREDICTIONS_SCRIPT="code/machine_learning/evaluate/DeepRNN/model_predict.py"
+SAVED_MODELS_PATH="Saves_DeepGRU_${REG_TYPE}/DeepGRU_Models"
+PREDICTIONS_SCRIPT="code/machine_learning/evaluate/DeepGRU/model_predict.py"
 
 # ensure model dir exists
 if [ ! -d "$SAVED_MODELS_PATH" ]; then
@@ -364,8 +364,8 @@ print_echo ""
 # testing_datasets.npy, testing_labels.npy, -preds, -models are required
 # (-plots is optional)
 
-SAVED_PREDICTIONS_PATH="Saves_DeepRNN_${REG_TYPE}/DeepRNN_Predictions"
-EVALUATIONS_SCRIPT="code/machine_learning/evaluate/DeepRNN/model_evaluate.py"
+SAVED_PREDICTIONS_PATH="Saves_DeepGRU_${REG_TYPE}/DeepGRU_Predictions"
+EVALUATIONS_SCRIPT="code/machine_learning/evaluate/DeepGRU/model_evaluate.py"
 
 # ensure predictions dir exists
 if [ ! -d "$SAVED_PREDICTIONS_PATH" ]; then
@@ -426,13 +426,13 @@ fi
 print_echo ""
 print_success "Evaluations obtained successfully"
 print_echo ""
-print_success "DeepRNN $REG_TYPE pipeline completed successfully"
+print_success "DeepGRU $REG_TYPE pipeline completed successfully"
 
 # print warning message
 print_echo ""
 print_warning "WARNING: Before rerunning, please rename or move the existing save directories. Otherwise, they will be overwritten."
 
 # move bash log to the save directory
-mv "$PATH_TO_BASH_LOG" "Saves_DeepRNN_${REG_TYPE}/"
+mv "$PATH_TO_BASH_LOG" "Saves_DeepGRU_${REG_TYPE}/"
 
 exit 0

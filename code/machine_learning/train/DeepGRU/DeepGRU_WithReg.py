@@ -6,8 +6,8 @@ import os
 import argparse
 import numpy as np
 from tensorflow.keras.regularizers import L1, L2, L1L2
-from sklearn.model_selection import KFold
-from DeepRNN_Architectures import DeepRNN
+from sklearn.model_selection import StratifiedKFold
+from DeepGRU_Architectures import DeepGRU
 from helper_functions.model_utils import (set_seed,
                                           #load_data, 
                                           make_files, 
@@ -23,7 +23,7 @@ from helper_functions.model_utils import (set_seed,
 epochs = 20  # number of epochs/dataset iterations
 batch_size = 32  # batch size
 learning_rate = 0.001  # learning rate
-model_type = "DeepRNN"
+model_type = "DeepGRU"
 
 list_of_large_datasets = ["AGO2_eCLIP_Manakov2022_train_dataset"]
 
@@ -50,7 +50,7 @@ def load_data(data_file, label_file):
 # main pipeline
 def main():
     # argument parser for dataset path and learning rate
-    parser = argparse.ArgumentParser(description="Train a DeepRNN model for miRNA-mRNA target site classification")
+    parser = argparse.ArgumentParser(description="Train a DeepGRU model for miRNA-mRNA target site classification")
     parser.add_argument("-e_data", "--encoded_data", required=True, type=str, help="Path to the encoded training dataset (.npy file)")
     parser.add_argument("-e_labels", "--encoded_labels", required=True, type=str, help="Path to the encoded training labels (.npy file)")
     parser.add_argument("-reg", "--regularization", required=True, type=str, help="NoReg or WithReg")
@@ -67,8 +67,8 @@ def main():
     training_labels_files = sorted(args.encoded_labels.split(','))
     
     # define the directory where you want to save the model and training logs
-    results_file_path = f"Saves_{model_type}_{args.regularization}/DeepRNN_{args.regularization}_training_logs.txt"
-    save_dir = f"Saves_{model_type}_{args.regularization}/DeepRNN_Models"
+    results_file_path = f"Saves_{model_type}_{args.regularization}/DeepGRU_{args.regularization}_training_logs.txt"
+    save_dir = f"Saves_{model_type}_{args.regularization}/DeepGRU_Models"
     
     # create the save directory
     make_files(os.path.split(save_dir)[0], [os.path.split(save_dir)[1]])
@@ -120,10 +120,10 @@ def main():
                 # initialize lists to hold CV metrics for this config
                 cv_accuracies, cv_losses, cv_f1s, cv_precisions, cv_recalls = [], [], [], [], []
                 
-                # create 5-fold cross validation splitter
-                kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
-                
-                for fold_count, (train_index, val_index) in enumerate(kf.split(encoded_data), start=1):
+                # create 5-fold stratified cross validation splitter
+                kf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
+
+                for fold_count, (train_index, val_index) in enumerate(kf.split(encoded_data, encoded_labels), start=1):
                     print(f"\n--- Fold {fold_count} of {n_splits} ---")
                     
                     # get training and validation data
@@ -131,7 +131,7 @@ def main():
                     X_val, y_val = encoded_data[val_index].copy(), encoded_labels[val_index].copy()
                 
                     # build model
-                    model = DeepRNN(input_shape, dropout_rate, learning_rate, reg_factor, regularizers[regularizer_type])
+                    model = DeepGRU(input_shape, dropout_rate, learning_rate, reg_factor, regularizers[regularizer_type])
                 
                     # train the model on folds
                     model, elapsed_training_time, metrics = train_model(model, epochs, batch_size,
@@ -184,7 +184,7 @@ def main():
             encoded_data, encoded_labels = load_data(training_data_file, training_label_file)
             input_shape = encoded_data.shape[1:]
             
-            final_model = DeepRNN(input_shape, best_config['dropout_rate'], learning_rate, best_config['reg_factor'], regularizers[best_config['regularizer_type']])
+            final_model = DeepGRU(input_shape, best_config['dropout_rate'], learning_rate, best_config['reg_factor'], regularizers[best_config['regularizer_type']])
             
             # train final model (using validation_split here)
             final_model, _, _ = train_model(final_model, epochs, batch_size, 

@@ -45,7 +45,7 @@ def main():
         raise ValueError(f"!!! Invalid regularization argument: {args.regularization} - Please use either 'NoReg' or 'WithReg' !!!")
 
     # initialise save predictions path
-    save_dir = f"Saves_DeepRNN_{args.regularization}/DeepRNN_Predictions"
+    save_dir = f"Saves_DeepGRU_{args.regularization}/DeepGRU_Predictions"
     make_files(os.path.split(save_dir)[0], [os.path.split(save_dir)[1]])
     
     count = 1
@@ -84,7 +84,7 @@ def main():
             
             # get predictions
             predictions = model.predict(encoded_test_data).flatten()
-            
+
             # store predictions in dataframe with model name as column
             predictions_df[model_name] = predictions
             

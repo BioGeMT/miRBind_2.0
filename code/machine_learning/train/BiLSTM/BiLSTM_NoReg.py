@@ -5,7 +5,7 @@ sys.path.insert(1, 'code/')
 import os
 import argparse
 import numpy as np
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 from BiLSTM_Architectures import BiLSTM
 from helper_functions.model_utils import (set_seed,
                                           #load_data, 
@@ -15,6 +15,9 @@ from helper_functions.model_utils import (set_seed,
                                           train_model,
                                           save_model, 
                                           cleanup)
+
+# import visualkeras
+# from PIL import ImageFont
 
 # * PARAMS ---
 
@@ -117,9 +120,9 @@ def main():
             cv_accuracies, cv_losses, cv_f1s, cv_precisions, cv_recalls = [], [], [], [], []
             
             # create 5-fold cross validation splitter
-            kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
+            kf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
             
-            for fold_count, (train_index, val_index) in enumerate(kf.split(encoded_data), start=1):
+            for fold_count, (train_index, val_index) in enumerate(kf.split(encoded_data, encoded_labels), start=1):
                 print(f"\n--- Fold {fold_count} of {n_splits} ---")
                 
                 # get training and validation data
@@ -128,6 +131,17 @@ def main():
                 
                 # build model
                 model = BiLSTM(input_shape, dropout_rate, learning_rate)
+                
+                # # visualize the model
+                # font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
+                # visualkeras.layered_view(
+                #     model,
+                #     to_file=f'output_{model_type}.png',
+                #     legend=True,      # enables drawing text
+                #     font=font,        # the PIL font you loaded
+                #     draw_volume=True, # or False for a flat 2D view
+                #     spacing=20
+                # )
             
                 # train the model on folds
                 model, elapsed_training_time, metrics = train_model(model, epochs, batch_size,

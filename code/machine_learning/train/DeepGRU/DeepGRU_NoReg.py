@@ -5,8 +5,8 @@ sys.path.insert(1, 'code/')
 import os
 import argparse
 import numpy as np
-from sklearn.model_selection import KFold
-from DeepRNN_Architectures import DeepRNN
+from sklearn.model_selection import StratifiedKFold
+from DeepGRU_Architectures import DeepGRU
 from helper_functions.model_utils import (set_seed,
                                           #load_data, 
                                           make_files, 
@@ -16,13 +16,16 @@ from helper_functions.model_utils import (set_seed,
                                           save_model, 
                                           cleanup)
 
+# import visualkeras
+# from PIL import ImageFont
+
 # * PARAMS ---
 
 # parameters
 epochs = 20  # number of epochs/dataset iterations
 batch_size = 32  # batch size
 learning_rate = 0.001  # learning rate
-model_type = "DeepRNN"
+model_type = "DeepGRU"
 
 list_of_large_datasets = ["AGO2_eCLIP_Manakov2022_train_dataset"]
 
@@ -45,7 +48,7 @@ def load_data(data_file, label_file):
 # main pipeline
 def main():
     # argument parser for dataset path and learning rate
-    parser = argparse.ArgumentParser(description="Train a DeepRNN model for miRNA-mRNA target site classification")
+    parser = argparse.ArgumentParser(description="Train a DeepGRU model for miRNA-mRNA target site classification")
     parser.add_argument("-e_data", "--encoded_data", required=True, type=str, help="Path to the encoded training dataset (.npy file)")
     parser.add_argument("-e_labels", "--encoded_labels", required=True, type=str, help="Path to the encoded training labels (.npy file)")
     parser.add_argument("-reg", "--regularization", required=True, type=str, help="NoReg or WithReg")
@@ -64,8 +67,8 @@ def main():
     regularizer_type = args.regularization
     
     # define the directory where you want to save the model and training logs
-    results_file_path = f"Saves_{model_type}_{regularizer_type}/DeepRNN_{regularizer_type}_training_logs.txt"
-    save_dir = f"Saves_{model_type}_{regularizer_type}/DeepRNN_Models"
+    results_file_path = f"Saves_{model_type}_{regularizer_type}/DeepGRU_{regularizer_type}_training_logs.txt"
+    save_dir = f"Saves_{model_type}_{regularizer_type}/DeepGRU_Models"
     
     # create the save directory
     make_files(os.path.split(save_dir)[0], [os.path.split(save_dir)[1]])
@@ -85,9 +88,6 @@ def main():
         # load the encoded training data and labels        
         full_training_data, full_training_labels = load_data(training_data_file, training_label_file)
         input_shape = full_training_data.shape[1:]
-            
-        # print regularizer type
-        print(f"\n\nUsing Regularizer: {regularizer_type}")
         
         with open(results_file_path, 'a') as results_file:
             results_file.write(f"Using Regularizer: {regularizer_type} ---\n")
@@ -116,9 +116,9 @@ def main():
             cv_accuracies, cv_losses, cv_f1s, cv_precisions, cv_recalls = [], [], [], [], []
             
             # create 5-fold cross validation splitter
-            kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
+            kf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
             
-            for fold_count, (train_index, val_index) in enumerate(kf.split(encoded_data), start=1):
+            for fold_count, (train_index, val_index) in enumerate(kf.split(encoded_data, encoded_labels), start=1):
                 print(f"\n--- Fold {fold_count} of {n_splits} ---")
                 
                 # get training and validation data
@@ -126,7 +126,18 @@ def main():
                 X_val, y_val = encoded_data[val_index].copy(), encoded_labels[val_index].copy()
             
                 # build model
-                model = DeepRNN(input_shape, dropout_rate, learning_rate)
+                model = DeepGRU(input_shape, dropout_rate, learning_rate)
+                
+                # # visualize the model
+                # font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
+                # visualkeras.layered_view(
+                #     model,
+                #     to_file=f'output_{model_type}.png',
+                #     legend=True,      # enables drawing text
+                #     font=font,        # the PIL font you loaded
+                #     draw_volume=True, # or False for a flat 2D view
+                #     spacing=20
+                # )
             
             # train the model on folds
                 model, elapsed_training_time, metrics = train_model(model, epochs, batch_size,
@@ -180,7 +191,7 @@ def main():
             input_shape = encoded_data.shape[1:]
             
             # build final model
-            final_model = DeepRNN(input_shape, best_config["dropout_rate"], learning_rate)
+            final_model = DeepGRU(input_shape, best_config["dropout_rate"], learning_rate)
             
             # train final model
             final_model, _, _ = train_model(final_model, epochs, batch_size, 
