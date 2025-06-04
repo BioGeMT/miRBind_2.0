@@ -57,37 +57,23 @@ Training involves:
 
 ## Usage
 
-### Data Annotation
+### Data Processing Pipeline
 ```bash
-python annotate_dataset.py \
-  --fasta mirgenedb_sequences.fa \
-  --tsv input_data.tsv \
-  --mirgenedb mirgenedb_families.tsv \
-  --output annotated_data.tsv
+./data_process_pipeline.sh
 ```
 
-### Family Counting and Splitting
+### Training Pipeline
+
 ```bash
-python count_fams.py annotated_data.tsv family_counts.tsv
-python split_fams.py annotated_data.tsv family_counts.tsv output_dir/ --threshold 1000
+./train_family_models.sh
 ```
 
-### Family Model Training
-```bash
-python train_family_models.py \
-  --train_dir single_fam_train/ \
-  --output_dir family_model_outputs/ \
-  --batch_size 32 \
-  --num_epochs 30 \
-  --embedding_dim 8
-```
+### Evaluation
 
-### Model Evaluation
 ```bash
 python eval.py \
   --test_file test_data.tsv \
   --models_dir family_model_outputs/ \
   --output_dir evaluation_outputs/
-```
+  ```
 
-See `train_family_models.sh`

@@ -7,8 +7,8 @@ echo "Current working directory: $(pwd)"
 echo "Python version: $(python --version 2>&1)"
 
 # Define paths
-TRAIN_DIR="single_fam_train"
-OUTPUT_DIR="family_model_outputs"
+TRAIN_DIR="family_train"
+OUTPUT_DIR="family_outputs"
 
 # Create output directory
 mkdir -p ${OUTPUT_DIR}
