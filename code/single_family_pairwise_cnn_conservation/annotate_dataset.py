@@ -66,11 +66,12 @@ def process_mapping(raw_mapping): # Renamed from process_mapping_for_annotation
     ref_id = re.sub(r"-v[0-9]+$", "", cleaned)
     return cleaned, ref_id
 
-def process_combined(tsv_file, fasta_file, mirgenedb_file, output_file_for_standalone_run):
+def process_combined(tsv_file, fasta_file, mirgenedb_file, output_file_for_standalone_run, drop_nan_families=True):
     """
     Combined workflow that:
     1. Processes TSV file to add mirgenedb_name column by matching sequences
     2. Enriches with mirgenedb family data
+    3. Optionally drops rows with NaN families
     Returns the processed DataFrame.
     The 'output_file_for_standalone_run' argument is used if this function
     is called from its own main() to save the output.
@@ -150,7 +151,6 @@ def process_combined(tsv_file, fasta_file, mirgenedb_file, output_file_for_stand
     if df_annotations.empty and stats["total"] > 0:
         print("Warning (Annotation): DataFrame is empty after sequence mapping, though input rows were processed.")
 
-
     # Phase 1 summary
     print(f"Annotation Module - Phase 1 Seq Mapping Summary:")
     print(f"  Total rows processed: {stats['total']}")
@@ -197,6 +197,21 @@ def process_combined(tsv_file, fasta_file, mirgenedb_file, output_file_for_stand
     if mirgenedb_id_col_in_fam_file in df_result.columns and mirgenedb_id_col_in_fam_file != 'mirgenedb_id':
          df_result.drop(columns=[mirgenedb_id_col_in_fam_file], inplace=True, errors='ignore')
     
+    # NEW: Drop rows with NaN families if requested
+    if drop_nan_families:
+        rows_before_drop = len(df_result)
+        df_result = df_result.dropna(subset=['mirgenedb_fam'])
+        rows_after_drop = len(df_result)
+        rows_dropped = rows_before_drop - rows_after_drop
+        
+        print(f"Annotation Module - NaN Family Filtering:")
+        print(f"  Rows before filtering: {rows_before_drop}")
+        print(f"  Rows with NaN families (dropped): {rows_dropped}")
+        print(f"  Rows after filtering: {rows_after_drop}")
+        
+        if rows_dropped > 0:
+            print(f"  ** {rows_dropped} rows were removed due to missing family assignments **")
+    
     # Final summary from this module's perspective
     print(f"Annotation Module - Final Results Summary:")
     print(f"  Total records in returned DataFrame: {len(df_result)}")
@@ -204,6 +219,7 @@ def process_combined(tsv_file, fasta_file, mirgenedb_file, output_file_for_stand
         print(f"  Unique precursor miRNA IDs (mirgenedb_id): {df_result['mirgenedb_id'].nunique(dropna=False)}") # count Nones too
     if 'mirgenedb_fam' in df_result.columns:
         print(f"  Rows successfully mapped to families: {df_result['mirgenedb_fam'].notna().sum()} ({df_result['mirgenedb_fam'].notna().sum()/len(df_result)*100 if len(df_result)>0 else 0:.1f}%)")
+        print(f"  Unique families: {df_result['mirgenedb_fam'].nunique()}")
     
     # The original script saved to output_file here.
     # If this function is called from its own __main__, output_file_for_standalone_run will be set.
@@ -226,6 +242,7 @@ def main():
             "and enrich with miRNA family data in a single workflow.\n"
             "1. Match sequences against FASTA to identify miRNAs\n"
             "2. Merge with MirGeneDB to add family information\n"
+            "3. Optionally drop rows with missing family assignments\n"
             "Rows with multiple mappings are dropped from mirgenedb_name assignment but kept in output."
         )
     )
@@ -233,18 +250,20 @@ def main():
     parser.add_argument("--tsv", required=True, help="TSV file with 'noncodingRNA' column to process.")
     parser.add_argument("--mirgenedb", required=True, help="MirGeneDB ID to Family TSV file.")
     parser.add_argument("--output", required=True, help="Output TSV file name.")
+    parser.add_argument("--keep-nan-families", action="store_true", 
+                       help="Keep rows with NaN/missing family assignments (default: drop them)")
     args = parser.parse_args()
 
     # Call process_combined and get the DataFrame
-    # The output_file argument for process_combined is now used by it to save if provided.
-    # main() here ensures it saves to args.output if run standalone.
-    df_annotated = process_combined(args.tsv, args.fasta, args.mirgenedb, args.output)
+    # The drop_nan_families parameter is inverted from the --keep-nan-families flag
+    drop_nan = not args.keep_nan_families
+    df_annotated = process_combined(args.tsv, args.fasta, args.mirgenedb, args.output, drop_nan_families=drop_nan)
     
     # The process_combined function now handles its own saving if output_file_for_standalone_run is given.
     # So, the explicit save here might be redundant if process_combined saves to args.output.
     # For clarity, let's ensure it's saved from main() based on the df returned.
     if df_annotated is not None and not df_annotated.empty:
-        if args.output != "temp_ann_module_output.tsv": # Avoid double saving the temp file if it's passed as output.
+        if args.output != "temp_ann_module_output.tsv": # Avoid double saving the temp file if it's passed as temp.
             try:
                 df_annotated.to_csv(args.output, sep="\t", index=False, na_rep='NA')
                 print(f"Annotation Script (main) - Final output saved to: {args.output}")
