@@ -1,6 +1,20 @@
 # Pairwise encoding CNN with Conservation Scores
 
-A CNN model for miRNA binding site prediction incorporating evolutionary conservation data
+A CNN model for miRNA binding site prediction incorporating evolutionary conservation data.
+
+## Data Cleaning
+
+Before training, datasets must be cleaned to remove entries with invalid conservation scores using clean.py:
+
+```bash
+python clean.py \
+  --input-files data/dataset1.tsv data/dataset2.tsv \
+  --output-dir data/cleaned/ \
+  --min-cons-len 50 \
+  --batch-size 10000
+  ```
+This removes rows with invalid/unparseable conservation scores, NaN values, or conservation arrays shorter than the minimum length.
+
 
 ## Model Architecture
 
