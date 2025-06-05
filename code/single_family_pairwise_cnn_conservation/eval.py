@@ -5,7 +5,6 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 import numpy as np
 from sklearn.metrics import precision_recall_curve, auc
-import matplotlib.pyplot as plt
 import os
 import json
 import glob
@@ -13,7 +12,6 @@ import pandas as pd
 from datetime import datetime
 import traceback
 from collections import defaultdict
-from matplotlib.gridspec import GridSpec
 
 from models import get_model
 from dataset import MiRNAConservationDataset
@@ -354,120 +352,6 @@ def evaluate_test_data(test_file, models_dir, output_dir, device, config):
         return None
 
 
-def create_evaluation_plot(results_summary, output_dir):
-    """
-    Create a plot with two aligned subplots:
-    1. AUPRC values (top) - line plot showing overall AUPRC
-    2. Dataset sizes (bottom) - bar plot with logarithmic scale
-    
-    Args:
-        results_summary: Dictionary containing evaluation results
-        output_dir: Directory to save the plot
-    """
-    
-    # Extract data for plotting
-    plot_data = []
-    for family_result in results_summary['family_results']:
-        plot_data.append({
-            'family': family_result['family_name'],
-            'test_auprc': family_result['test_auprc'],
-            'test_samples': family_result['test_samples']
-        })
-    
-    # Convert to DataFrame and sort by test samples (descending)
-    plot_df = pd.DataFrame(plot_data)
-    plot_df = plot_df.sort_values('test_samples', ascending=False)
-    
-    # Get overall AUPRC
-    overall_auprc = results_summary['overall_auprc']
-    
-    # Create log-transformed sample counts
-    plot_df['log_samples'] = np.log10(plot_df['test_samples'])
-    
-    # Create figure with single plot showing overall AUPRC and dataset sizes
-    fig, ax = plt.subplots(figsize=(14, 8))
-    
-    # Create bar plot for dataset sizes
-    x = range(len(plot_df))
-    bars = ax.bar(x, plot_df['test_samples'], color='#66CC66', alpha=0.7, width=0.8)
-    
-    # Add horizontal line for overall AUPRC
-    ax2 = ax.twinx()  # Create second y-axis
-    ax2.axhline(y=overall_auprc, color='#FF3333', linestyle='--', linewidth=3,
-                label=f'Overall AUPRC ({overall_auprc:.4f})')
-    
-    # Set properties
-    ax.set_xlabel('miRNA Family (sorted by test set size)', fontsize=14)
-    ax.set_ylabel('Test Samples', fontsize=14, fontweight='bold')
-    ax2.set_ylabel('Overall PR-AUC', fontsize=14, fontweight='bold', color='#FF3333')
-    ax.set_title('Test Set Sizes and Overall Model Performance', fontsize=16, fontweight='bold')
-    
-    # Set y-axis for AUPRC
-    ax2.set_ylim(0.6, 1.0)
-    ax2.tick_params(axis='y', labelcolor='#FF3333')
-    
-    # Use log scale for sample counts
-    ax.set_yscale('log')
-    ax.grid(axis='y', linestyle='--', alpha=0.3)
-    
-    # Set x-ticks
-    ax.set_xticks(range(len(plot_df)))
-    ax.set_xticklabels(plot_df['family'], rotation=45, ha='right', fontsize=10)
-    
-    # Add legend
-    ax2.legend(loc='upper right', fontsize=12)
-    
-    # Add text box with summary stats
-    total_samples = results_summary['total_samples_evaluated']
-    coverage = results_summary['coverage_percentage']
-    textstr = f'Total samples evaluated: {total_samples:,}\nCoverage: {coverage:.1f}%'
-    props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-    ax.text(0.02, 0.98, textstr, transform=ax.transAxes, fontsize=11,
-            verticalalignment='top', bbox=props)
-    
-    plt.tight_layout()
-    
-    # Save the plot
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    plot_file = os.path.join(output_dir, f"evaluation_plot_{timestamp}.png")
-    plt.savefig(plot_file, dpi=300, bbox_inches='tight')
-    plt.close()
-    
-    print(f"\nEvaluation plot saved to: {plot_file}")
-    
-    # Also create detailed AUPRC plot with all families
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10), 
-                                   gridspec_kw={'height_ratios': [2, 1], 'hspace': 0})
-    
-    # Top plot: Family AUPRCs
-    ax1.bar(x, plot_df['test_auprc'], color='#0066CC', alpha=0.7, width=0.8)
-    ax1.axhline(y=overall_auprc, color='#FF3333', linestyle='--', linewidth=2,
-                label=f'Overall AUPRC ({overall_auprc:.4f})')
-    ax1.set_ylabel('PR-AUC', fontsize=14, fontweight='bold')
-    ax1.set_title('Family-specific Test Performance', fontsize=16, fontweight='bold')
-    ax1.set_ylim(0, 1.0)
-    ax1.grid(axis='y', linestyle='--', alpha=0.3)
-    ax1.legend(loc='lower left', fontsize=12)
-    ax1.set_xticks([])
-    
-    # Bottom plot: Sample sizes
-    ax2.bar(x, plot_df['test_samples'], color='#66CC66', alpha=0.7, width=0.8)
-    ax2.set_ylabel('Test Samples', fontsize=14, fontweight='bold')
-    ax2.set_xlabel('miRNA Family (sorted by test set size)', fontsize=14)
-    ax2.set_yscale('log')
-    ax2.grid(axis='y', linestyle='--', alpha=0.3)
-    ax2.set_xticks(range(len(plot_df)))
-    ax2.set_xticklabels(plot_df['family'], rotation=45, ha='right', fontsize=10)
-    
-    plt.tight_layout()
-    
-    detail_plot_file = os.path.join(output_dir, f"family_performance_detail_{timestamp}.png")
-    plt.savefig(detail_plot_file, dpi=300, bbox_inches='tight')
-    plt.close()
-    
-    print(f"Detailed performance plot saved to: {detail_plot_file}")
-
-
 def main():
     parser = argparse.ArgumentParser(description='Evaluate family-specific miRNA binding prediction models')
     
@@ -495,10 +379,6 @@ def main():
     parser.add_argument('--dropout_rate', type=float, default=0.2, 
                         help='Dropout rate')
     
-    # Plotting option
-    parser.add_argument('--no-plot', action='store_true',
-                        help='Skip generating the evaluation plot')
-    
     args = parser.parse_args()
     
     # Create output directory if it doesn't exist
@@ -522,13 +402,10 @@ def main():
     # Run evaluation
     results = evaluate_test_data(args.test_file, args.models_dir, args.output_dir, device, config)
     
-    # Create evaluation plot if results are available and plotting is not disabled
-    if results and not args.no_plot:
-        try:
-            create_evaluation_plot(results, args.output_dir)
-        except Exception as e:
-            print(f"Warning: Could not create evaluation plot: {e}")
-            print("Evaluation results were still saved successfully.")
+    if results:
+        print("\nEvaluation completed successfully!")
+    else:
+        print("\nEvaluation failed or no results generated.")
 
 
 if __name__ == "__main__":

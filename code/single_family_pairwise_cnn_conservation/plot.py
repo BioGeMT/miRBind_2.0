@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-"""
-Enhanced evaluation plotting script for miRNA target prediction models.
-Creates clean visualizations of family-specific performance and dataset sizes.
-"""
 
 import pandas as pd
 import matplotlib.pyplot as plt
