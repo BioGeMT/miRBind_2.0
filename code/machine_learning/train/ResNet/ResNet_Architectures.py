@@ -138,8 +138,8 @@ def build_resnet_small(input_shape, dropout_rate, learning_rate, reg_factor=None
 
     # initial Conv Layer
     x = layers.Conv2D(64, kernel_size=(3, 3), padding='same')(inputs)
+    x = layers.ReLU()(x)
     x = layers.BatchNormalization()(x)
-    x = layers.Activation("relu")(x)
 
     # add ResBlocks
     x = ResBlock(downsample=False, filters=64, reg_factor=reg_factor, regularizer_type=regularizer_type)(x)
@@ -173,8 +173,8 @@ def build_resnet_medium(input_shape, dropout_rate, learning_rate, reg_factor=Non
 
     # initial Conv Layer
     x = layers.Conv2D(64, kernel_size=(3, 3), padding='same')(inputs)
+    x = layers.ReLU()(x)
     x = layers.BatchNormalization()(x)
-    x = layers.Activation("relu")(x)
 
     # add ResBlocks
     x = ResBlock(downsample=False, filters=64, reg_factor=reg_factor, regularizer_type=regularizer_type)(x)
