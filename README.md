@@ -4,12 +4,13 @@ Repository for ML tools for miRNA binding site prediction.
 
 ### Structure of the repository:
 
-- `code` - Folder with plain scripts, that can work on their own and are reusable. Example of such a script is *specific encoder for the miRNA:mRNA sequences*; or a *random Forest training script*.
-- `analysis` - Folder with directory per each specific analysis, eg. *training of Random Forest on K mer encoding of Manakov 1:1 dataset*. Each of this specific analysis will contain one master script, that will reproduce the whole analysis that was performed. 
+- `code` - Folder with plain scripts, that can work on their own and are reusable. The types of scripts that belong to this folder are f.e. _**encoders, model definitions, scripts to compute metrics, and plotting scripts**_. Examples of such a script include a *specific encoder for miRNA:mRNA sequences* and a *random Forest training script*.
+- `analysis` - Folder with a directory for each specific analysis, eg. *training of Random Forest on K mer encoding of Manakov 1:1 dataset*. Each of these specific analyses will contain one master script that will reproduce the whole analysis that was performed. 
 You can also use your analysis folder as a playground (eg. for hyperparameter optimization or trying different architectures), but the master script should run just the final analysis.
 Store here intermediate results too, when running the analysis (like encoded datasets or prediction files), but please don't commit them.
 All the scripts in this folder should not be code-heavy, they should use code chunks already available in the `code` directory. 
-Use custom code pieces only for parts that are very specific fo your analysis and not reusable. 
+Use custom code pieces only for parts that are very specific fo your analysis and not reusable.
+Add requirements.txt/yaml.
 - `data` - Placeholder empty folder, that locally contains all the datasets used for model trainings etc.
 Here on GitHub it contains just a script that when executed will download the datasets and put them in a proper folder structure.
 - `models` - Placeholder empty folder, similar to the `data` folder. Contains a script that downloads the trained models.
