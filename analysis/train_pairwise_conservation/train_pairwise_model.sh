@@ -16,9 +16,16 @@ echo "Python version: $(python --version 2>&1)"
 # Set environment
 set -e
 
-TRAIN_FILE="/homes/dtzim01/mirbind/mirgene_encoded_manakov_train.tsv"
-TEST_FILE1="/homes/dtzim01/mirgenedb/datasets_clean/cleaned_manakov_test.tsv"
-TEST_FILE2="/homes/dtzim01/mirgenedb/datasets_clean/cleaned_manakov_leftout.tsv"
+# check arguments
+if [ $# -ne 3 ]; then
+    echo "usage: $0 <train_file> <test_file1> <test_file2>"
+    exit 1
+fi
+
+# assign command line arguments
+TRAIN_FILE="$1"
+TEST_FILE1="$2"
+TEST_FILE2="$3"
 
 # Set output directory
 OUTPUT_DIR="model_outputs_conservation_smol"
