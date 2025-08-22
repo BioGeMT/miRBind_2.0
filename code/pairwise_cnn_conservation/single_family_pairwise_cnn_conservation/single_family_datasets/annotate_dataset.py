@@ -40,22 +40,12 @@ def parse_fasta(fasta_file): # Renamed from parse_fasta_for_annotation for inter
                 sequence = sequence.upper().replace('U', 'T')
                 mapping[sequence] = header
     except FileNotFoundError:
-        # If called from main script, sys.exit is fine. If imported, might be too abrupt.
-        # For now, keeping sys.exit as per original script's severity for this error.
-        print(f"Error: FASTA file '{fasta_file}' not found.")
-        sys.exit(1) # Or raise an exception to be caught by the caller
+        raise FileNotFoundError(f"FASTA file '{fasta_file}' not found")
     except Exception as e:
-        print(f"Error parsing FASTA file '{fasta_file}': {e}")
-        sys.exit(1) # Or raise
+        raise RuntimeError(f"Error parsing FASTA file '{fasta_file}': {e}")
         
     if not mapping:
-        # This was sys.exit before. If imported, we might want to return empty and let caller decide.
-        # However, original script considered this fatal.
-        # For now, keeping the fatal exit if no sequences, as per original logic.
-        # If this function is called by an importer that can handle an empty mapping,
-        # this could be changed to: print warning and return empty mapping.
-        print(f"Error: No sequences found in the FASTA file: {fasta_file}.")
-        sys.exit(1)
+        raise ValueError(f"No sequences found in the FASTA file: {fasta_file}")
     return mapping
 
 def process_mapping(raw_mapping): # Renamed from process_mapping_for_annotation
@@ -80,10 +70,7 @@ def process_combined(tsv_file, fasta_file, mirgenedb_file, output_file_for_stand
         with open(tsv_file, 'r', newline='', encoding='utf-8') as infile:
             reader = csv.DictReader(infile, delimiter="\t")
             if not reader.fieldnames or "noncodingRNA" not in reader.fieldnames:
-                print(f"Error: '{tsv_file}' does not contain the required 'noncodingRNA' column or is empty/malformed.")
-                # If imported, returning None allows caller to handle. If standalone, sys.exit is fine.
-                # For consistency with original severity:
-                sys.exit(1) 
+                raise ValueError(f"'{tsv_file}' does not contain the required 'noncodingRNA' column or is empty/malformed") 
             
             for row_dict_original in reader:
                 stats["total"] += 1
@@ -135,9 +122,9 @@ def process_combined(tsv_file, fasta_file, mirgenedb_file, output_file_for_stand
                     stats["appended_no_match_or_empty_seq"] +=1 # Re-evaluate this counter name/logic if needed
                 rows.append(row)
     except FileNotFoundError:
-        print(f"Error: Input TSV '{tsv_file}' not found."); sys.exit(1)
+        raise FileNotFoundError(f"Input TSV '{tsv_file}' not found")
     except Exception as e:
-        print(f"Error processing TSV file '{tsv_file}': {e}"); sys.exit(1)
+        raise RuntimeError(f"Error processing TSV file '{tsv_file}': {e}")
     
     df_annotations = pd.DataFrame(rows)
     if df_annotations.empty and stats["total"] > 0:
@@ -157,15 +144,19 @@ def process_combined(tsv_file, fasta_file, mirgenedb_file, output_file_for_stand
     try:
         df_mirgene_families = pd.read_csv(mirgenedb_file, sep="\t", dtype=str) # Read all as str for safety
         print(f"  MirGeneDB family file columns: {df_mirgene_families.columns.tolist()}")
-    except FileNotFoundError: print(f"Error reading MirGeneDB family file: {mirgenedb_file} not found."); sys.exit(1)
-    except Exception as e: print(f"Error reading MirGeneDB family file '{mirgenedb_file}': {e}"); sys.exit(1)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"MirGeneDB family file not found: {mirgenedb_file}")
+    except Exception as e:
+        raise RuntimeError(f"Error reading MirGeneDB family file '{mirgenedb_file}': {e}")
     print(f"  Loaded {len(df_mirgene_families)} records from MirGeneDB family file.")
     
     mirgenedb_id_col_in_fam_file = next((c for c in df_mirgene_families.columns if c.lower() in ['mirgenedb_id', 'id']), None)
     family_col_in_fam_file = next((c for c in df_mirgene_families.columns if c.lower() == 'family'), None)
     
-    if not mirgenedb_id_col_in_fam_file: print(f"Error: MirGeneDB ID column not found in family file. Cols: {df_mirgene_families.columns.tolist()}"); sys.exit(1)
-    if not family_col_in_fam_file: print(f"Error: Family column not found in family file. Cols: {df_mirgene_families.columns.tolist()}"); sys.exit(1)
+    if not mirgenedb_id_col_in_fam_file:
+        raise ValueError(f"MirGeneDB ID column not found in family file. Cols: {df_mirgene_families.columns.tolist()}")
+    if not family_col_in_fam_file:
+        raise ValueError(f"Family column not found in family file. Cols: {df_mirgene_families.columns.tolist()}")
     print(f"  Using ID column: '{mirgenedb_id_col_in_fam_file}', Family column: '{family_col_in_fam_file}' from family file.")
     
     # Ensure mirgenedb_name column exists before trying to apply functions to it
@@ -246,25 +237,32 @@ def main():
                        help="Keep rows with NaN/missing family assignments (default: drop them)")
     args = parser.parse_args()
 
-    # Call process_combined and get the DataFrame
-    # The drop_nan_families parameter is inverted from the --keep-nan-families flag
-    drop_nan = not args.keep_nan_families
-    df_annotated = process_combined(args.tsv, args.fasta, args.mirgenedb, args.output, drop_nan_families=drop_nan)
-    
-    # The process_combined function now handles its own saving if output_file_for_standalone_run is given.
-    # So, the explicit save here might be redundant if process_combined saves to args.output.
-    # For clarity, let's ensure it's saved from main() based on the df returned.
-    if df_annotated is not None and not df_annotated.empty:
-        if args.output != "temp_ann_module_output.tsv": # Avoid double saving the temp file if it's passed as temp.
-            try:
-                df_annotated.to_csv(args.output, sep="\t", index=False, na_rep='NA')
-                print(f"Annotation Script (main) - Final output saved to: {args.output}")
-            except Exception as e:
-                 print(f"Annotation Script (main) - Error saving output: {e}")
-    elif df_annotated is None:
-        print("Annotation Script (main) - process_combined returned None. No output file saved by main().")
-    else: # df_annotated is empty
-        print("Annotation Script (main) - process_combined returned an empty DataFrame. No output file saved by main().")
+    try:
+        # Call process_combined and get the DataFrame
+        # The drop_nan_families parameter is inverted from the --keep-nan-families flag
+        drop_nan = not args.keep_nan_families
+        df_annotated = process_combined(args.tsv, args.fasta, args.mirgenedb, args.output, drop_nan_families=drop_nan)
+        
+        # The process_combined function now handles its own saving if output_file_for_standalone_run is given.
+        # So, the explicit save here might be redundant if process_combined saves to args.output.
+        # For clarity, let's ensure it's saved from main() based on the df returned.
+        if df_annotated is not None and not df_annotated.empty:
+            if args.output != "temp_ann_module_output.tsv": # Avoid double saving the temp file if it's passed as temp.
+                try:
+                    df_annotated.to_csv(args.output, sep="\t", index=False, na_rep='NA')
+                    print(f"Annotation Script (main) - Final output saved to: {args.output}")
+                except Exception as e:
+                     print(f"Annotation Script (main) - Error saving output: {e}")
+        elif df_annotated is None:
+            print("Annotation Script (main) - process_combined returned None. No output file saved by main().")
+        else: # df_annotated is empty
+            print("Annotation Script (main) - process_combined returned an empty DataFrame. No output file saved by main().")
+    except (FileNotFoundError, ValueError, RuntimeError) as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
