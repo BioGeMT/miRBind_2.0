@@ -24,18 +24,10 @@ class MiRNAConservationDataset(Dataset):
                     
                 gene = fields[0]
                 ncrna = fields[1]
-                
-                # Handle different label positions based on file format
-                if len(fields) >= 6 and fields[5].isdigit():
-                    # Original format (label in column 6)
-                    label = int(fields[5])
-                    phylop_idx = 11
-                    phastcons_idx = 12
-                else:
-                    # New format (label in column 3)
-                    label = int(fields[2])
-                    phylop_idx = 3
-                    phastcons_idx = 4
+                # label always in column 5, phylop in column 11, phastcons in column 12
+                label = int(fields[5])
+                phylop_idx = 11
+                phastcons_idx = 12
                 
                 # Parse conservation scores if they exist
                 try:
