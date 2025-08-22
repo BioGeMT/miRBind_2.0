@@ -20,7 +20,8 @@ def split_by_family(
     output_dir,
     threshold=1000,
     family_col_name='mirgenedb_fam',
-    count_col_name='count'
+    count_col_name='count',
+    progress_interval=50000
 ):
     # splits a large tsv file into multiple tsv files based on values in a specified family column
 
@@ -124,7 +125,7 @@ def split_by_family(
             print("Processing rows and collecting family data...")
             for i, row in enumerate(reader):
                 processed_data_rows = i + 1
-                if processed_data_rows % 50000 == 0:
+                if processed_data_rows % progress_interval == 0:
                     print(f"  Processed {processed_data_rows} rows...")
 
                 if len(row) > data_fam_col_index:
@@ -209,6 +210,12 @@ if __name__ == "__main__":
         default='count',
         help='Name of the column containing counts in the counts file.'
     )
+    parser.add_argument(
+        '--progress_interval',
+        type=int,
+        default=50000,
+        help='Number of rows to process before printing progress update.'
+    )
 
     args = parser.parse_args()
 
@@ -218,5 +225,6 @@ if __name__ == "__main__":
         args.output_dir,
         args.threshold,
         args.family_col,
-        args.count_col
+        args.count_col,
+        args.progress_interval
     )
