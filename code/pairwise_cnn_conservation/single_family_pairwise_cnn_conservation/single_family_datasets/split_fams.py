@@ -95,23 +95,22 @@ def split_by_family(
 
 
     print(f"\n--- Step 3: Processing Original Data File ({original_data_file}) ---")
-    output_writers = {} # Dictionary to store {family_name: csv_writer}
-    output_files = {}   # Dictionary to store {family_name: file_handle}
     original_header = None
     data_fam_col_index = -1
+    family_data = defaultdict(list)
 
     try:
         with open(original_data_file, 'r', newline='', encoding='utf-8') as infile:
             reader = csv.reader(infile, delimiter='\t')
 
-            # Read header from original data
+            # read header from original data
             try:
                 original_header = next(reader)
             except StopIteration:
                 print(f"Error: Original data file '{original_data_file}' appears to be empty.", file=sys.stderr)
-                sys.exit(1) # Exit if header can't be read
+                sys.exit(1)
 
-            # Find family column index in original data
+            # find family column index in original data
             try:
                 data_fam_col_index = original_header.index(family_col_name)
                 print(f"Found '{family_col_name}' at index {data_fam_col_index} in original data file.")
@@ -120,46 +119,18 @@ def split_by_family(
                 print(f"Header found: {original_header}", file=sys.stderr)
                 sys.exit(1)
 
-            # Process data rows
+            # collect data for each family
             processed_data_rows = 0
-            written_rows_count = defaultdict(int)
-            print("Processing rows and writing to family-specific files...")
+            print("Processing rows and collecting family data...")
             for i, row in enumerate(reader):
                 processed_data_rows = i + 1
-                if processed_data_rows % 50000 == 0: # Progress indicator
+                if processed_data_rows % 50000 == 0:
                     print(f"  Processed {processed_data_rows} rows...")
 
                 if len(row) > data_fam_col_index:
                     family = row[data_fam_col_index]
-
-                    # Check if this family is one we need to keep
                     if family in families_to_keep:
-                        # If we haven't opened a file for this family yet, do it now
-                        if family not in output_writers:
-                            output_filename = create_output_filename(output_dir, family)
-                            try:
-                                # Open file, create writer, write header, store them
-                                outfile = open(output_filename, 'w', newline='', encoding='utf-8')
-                                writer = csv.writer(outfile, delimiter='\t')
-                                writer.writerow(original_header) # Write header ONCE
-                                output_files[family] = outfile
-                                output_writers[family] = writer
-                                print(f"  Created output file for family '{family}': {output_filename}")
-                            except Exception as e:
-                                print(f"Error: Could not create or write header to output file '{output_filename}' for family '{family}'. Skipping this family. Error: {e}", file=sys.stderr)
-                                families_to_keep.remove(family) # Stop trying to write for this family
-                                if family in output_files: # Clean up if file was partially opened
-                                     output_files[family].close()
-                                     del output_files[family]
-                                continue # Skip to next row
-
-                        # Write the current row to the correct family file
-                        try:
-                           output_writers[family].writerow(row)
-                           written_rows_count[family] += 1
-                        except Exception as e:
-                            print(f"Error writing row {processed_data_rows + 1} for family '{family}' to its file. Skipping row. Error: {e}", file=sys.stderr)
-                            # Decide if you want to remove the family from processing here too
+                        family_data[family].append(row)
                 else:
                      print(f"Warning: Skipping short row {processed_data_rows + 1} in original data file: {row}", file=sys.stderr)
 
@@ -170,22 +141,23 @@ def split_by_family(
         sys.exit(1)
     except Exception as e:
         print(f"An error occurred while processing '{original_data_file}': {e}", file=sys.stderr)
-        # Ensure files opened so far are closed before exiting
-    finally:
-        # --- Step 4: Clean up - Close all opened output files ---
-        print("\n--- Step 4: Closing Output Files ---")
-        closed_count = 0
-        for family, f_handle in output_files.items():
-            try:
-                f_handle.close()
-                closed_count += 1
-                # print(f"  Closed file for family '{family}'. Wrote {written_rows_count[family]} rows.")
-            except Exception as e:
-                print(f"Warning: Error closing file for family '{family}': {e}", file=sys.stderr)
-        print(f"Closed {closed_count} output files.")
-        if closed_count != len(output_files):
-             print(f"Warning: Expected to close {len(output_files)} files, but only closed {closed_count}.", file=sys.stderr)
+        sys.exit(1)
 
+    # write family data to files using context managers
+    print(f"\n--- Step 4: Writing Family Files ---")
+    written_rows_count = {}
+    
+    for family, rows in family_data.items():
+        output_filename = create_output_filename(output_dir, family)
+        try:
+            with open(output_filename, 'w', newline='', encoding='utf-8') as outfile:
+                writer = csv.writer(outfile, delimiter='\t')
+                writer.writerow(original_header)
+                writer.writerows(rows)
+                written_rows_count[family] = len(rows)
+                print(f"  Created output file for family '{family}': {output_filename}")
+        except Exception as e:
+            print(f"Error: Could not write output file '{output_filename}' for family '{family}'. Error: {e}", file=sys.stderr)
 
     print("\n--- Processing Complete ---")
     if written_rows_count:
