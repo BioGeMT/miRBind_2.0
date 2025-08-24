@@ -32,19 +32,21 @@ class LogFileGenerator:
     def log_learned_pair_values(self, model, nucleotide_pairs):
         log_file = os.path.join(self._log_dir, f"{self._get_timestamp()}_learned_pair_values_log.tsv")
 
-        # Get the embedding weights and reshape them properly
-        embedding_weights = model.pair_embeddings.weight.detach().cpu().numpy()
-        embedding_dim = embedding_weights.shape[1]
+        # Get the linear layer weights and reshape them properly
+        linear_weights = model.pair_linear.weight.detach().cpu().numpy()
+        embedding_dim = linear_weights.shape[0]
 
         # Create the pairs list including the padding pair
         all_pairs = nucleotide_pairs + [('N', 'N')]
 
+        linear_weights = linear_weights.T  # shape: (num_pairs, embedding_dim)
+        
         # If embedding_dim is 1, flatten the weights
         if embedding_dim == 1:
-            values = embedding_weights.flatten()
+            values = linear_weights.flatten()
         else:
             # For multi-dimensional embeddings, we might want to keep all dimensions
-            values = [weights for weights in embedding_weights]
+            values = [weights for weights in linear_weights]
 
         # Make sure we have the same number of pairs and values
         if len(all_pairs) != len(values):

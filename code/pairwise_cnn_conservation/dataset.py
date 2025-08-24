@@ -13,6 +13,7 @@ class MiRNAConservationDataset(Dataset):
         self.labels = []
         self.phylop_scores = []
         self.phastcons_scores = []
+        self.num_pairs = num_pairs + 1
         
         with open(data_file, 'r') as f:
             # Skip header
@@ -102,12 +103,13 @@ class MiRNAConservationDataset(Dataset):
         return len(self.data)
         
     def __getitem__(self, idx):
-        data = torch.from_numpy(self.data[idx]).long()
+        data_indices = torch.from_numpy(self.data[idx]).long()
+        data_onehot = torch.nn.functional.one_hot(data_indices, num_classes=self.num_pairs).float()
         label = torch.tensor(self.labels[idx]).float()
         phylop = torch.from_numpy(self.phylop_scores[idx]).float()
         phastcons = torch.from_numpy(self.phastcons_scores[idx]).float()
         
-        return data, phylop, phastcons, label
+        return data_onehot, phylop, phastcons, label
     
     @staticmethod
     def create_train_validation_split(dataset, validation_fraction=0.1, random_seed=42):

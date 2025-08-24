@@ -13,7 +13,7 @@ class PairwiseEncodingCNNWithConservation(nn.Module):
     ):
         super(PairwiseEncodingCNNWithConservation, self).__init__()
         
-        self.pair_embeddings = nn.Embedding(num_pairs + 1, embedding_dim)
+        self.pair_linear = nn.Linear(num_pairs, embedding_dim)
         self.mirna_length = mirna_length
         self.target_length = target_length
         
@@ -42,13 +42,14 @@ class PairwiseEncodingCNNWithConservation(nn.Module):
         self.fc2 = nn.Linear(30, 1)
         
     def _get_flat_features(self):
-        # Create dummy data to compute the output shape
-        x = torch.zeros(1, self.mirna_length, self.target_length)
-        phylop = torch.zeros(1, self.mirna_length, self.target_length)
-        phastcons = torch.zeros(1, self.mirna_length, self.target_length)
+        # Create dummy one-hot encoded data to compute the output shape
+        num_pairs = self.pair_linear.in_features
+        x = torch.zeros(1, self.target_length, self.mirna_length, num_pairs)
+        phylop = torch.zeros(1, self.target_length, self.mirna_length)
+        phastcons = torch.zeros(1, self.target_length, self.mirna_length)
         
         # Process through the network
-        seq_emb = self.pair_embeddings(x.long())
+        seq_emb = self.pair_linear(x)
         seq_emb = seq_emb.permute(0, 3, 1, 2)
         
         # Normalize and reshape conservation scores
@@ -69,9 +70,8 @@ class PairwiseEncodingCNNWithConservation(nn.Module):
         # Store shapes for logging
         shapes = {"input": x.shape}
         
-        # Process sequence data
-        x = self.pair_embeddings(x)
-        shapes["after_embedding"] = x.shape
+        x = self.pair_linear(x)
+        shapes["after_linear"] = x.shape
         
         x = x.permute(0, 3, 1, 2)
         shapes["after_permute"] = x.shape
