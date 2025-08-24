@@ -23,7 +23,7 @@ NUM_EPOCHS=30
 BATCH_SIZE=32
 PATIENCE=5
 TARGET_LENGTH=50
-MIRNA_LENGTH=25
+MIRNA_LENGTH=28
 
 # Run training
 echo "Starting training for miRNA family models..."

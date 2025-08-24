@@ -34,12 +34,14 @@ mkdir -p ${OUTPUT_DIR}
 # Set training parameters
 EMBEDDING_DIM=8
 FILTER_SIZES="128,64,32"
-KERNEL_SIZES="6,5,5"
+KERNEL_SIZES="6,3,3"
 DROPOUT_RATE=0.2
 LEARNING_RATE=0.001
 NUM_EPOCHS=30
 BATCH_SIZE=32
 PATIENCE=5
+TARGET_LENGTH=50
+MIRNA_LENGTH=28
 
 # Run training
 echo "Starting training with conservation scores..."
@@ -47,6 +49,8 @@ python ../code/pairwise_cnn_conservation/train_pairwise_model.py \
     --train_file ${TRAIN_FILE} \
     --test_file1 ${TEST_FILE1} \
     --test_file2 ${TEST_FILE2} \
+    --target_length ${TARGET_LENGTH} \
+    --mirna_length ${MIRNA_LENGTH} \
     --batch_size ${BATCH_SIZE} \
     --num_epochs ${NUM_EPOCHS} \
     --embedding_dim ${EMBEDDING_DIM} \
