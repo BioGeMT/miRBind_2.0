@@ -2,3 +2,6 @@ python cnn_pairwise_encoding.py --train_file "../../data/chimeric_datasets/Manak
 
 
 # python cnn_pairwise_encoding_optuna.py --train_file "../../data/chimeric_datasets/Manakov2022_flat/AGO2_eCLIP_Manakov2022_train.tsv" --n_trials 100 --study_name your_study_name
+
+# python train.py --model_type 'mirbind' --train_data '../../data/chimeric_datasets/Manakov2022_flat/AGO2_eCLIP_Manakov2022_1_train_dataset.npy' --train_labels '../../data/chimeric_datasets/Manakov2022_flat/AGO2_eCLIP_Manakov2022_1_train_labels.npy' --dataset_size 2516195
+

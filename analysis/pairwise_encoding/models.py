@@ -57,7 +57,7 @@ class MiRBindCNN(nn.Module):
             in_features = out_features
             
         self.final_dense = nn.Linear(in_features, 1)
-        self.pool = nn.MaxPool2d(pool_size, padding=1)
+        # self.pool = nn.MaxPool2d(pool_size, padding=1)
         
     def forward(self, x):
         # CNN layers
@@ -65,7 +65,7 @@ class MiRBindCNN(nn.Module):
             x = conv(x)
             x = F.leaky_relu(x)
             x = bn(x)
-            x = self.pool(x)
+            # x = self.pool(x)
             x = dropout(x)
             
         x = torch.flatten(x, 1)
@@ -152,10 +152,10 @@ class PairwiseEncodingCNN(nn.Module):
         self.dropout2 = nn.Dropout(dropout_rate)
         
         # self.conv3 = nn.Conv2d(filter_sizes[1], filter_sizes[2], kernel_size=kernel_sizes[2])
-        self.conv3 = nn.Conv2d(filter_sizes[1], filter_sizes[2], kernel_size=kernel_sizes[2], padding=1)
-        self.bn3 = nn.BatchNorm2d(filter_sizes[2])
-        self.pool3 = nn.MaxPool2d(kernel_size=2)
-        self.dropout3 = nn.Dropout(dropout_rate)
+        # self.conv3 = nn.Conv2d(filter_sizes[1], filter_sizes[2], kernel_size=kernel_sizes[2], padding=1)
+        # self.bn3 = nn.BatchNorm2d(filter_sizes[2])
+        # self.pool3 = nn.MaxPool2d(kernel_size=2)
+        # self.dropout3 = nn.Dropout(dropout_rate)
         
         # self.conv4 = nn.Conv2d(filter_sizes[2], filter_sizes[3], kernel_size=kernel_sizes[3])
         
@@ -175,7 +175,7 @@ class PairwiseEncodingCNN(nn.Module):
         print(f"  After permute: [batch_size, {embedding_dim}, {mirna_length}, {target_length}]")
         print(f"  After conv1: [batch_size, {filter_sizes[0]}, {mirna_length}, {target_length}]")
         print(f"  After conv2: [batch_size, {filter_sizes[1]}, {mirna_length}, {target_length}]")
-        print(f"  After conv3: [batch_size, {filter_sizes[2]}, {mirna_length}, {target_length}]")
+        # print(f"  After conv3: [batch_size, {filter_sizes[2]}, {mirna_length}, {target_length}]")
         print(f"  Flattened features: {self.flat_features}")
         print(f"  After fc1: [batch_size, 30]")
         print(f"  Output: [batch_size, 1]")
@@ -186,7 +186,8 @@ class PairwiseEncodingCNN(nn.Module):
         x = x.permute(0, 3, 1, 2)
         x = self.pool1(F.leaky_relu(self.bn1(self.conv1(x)), 0.1))
         x = self.pool2(F.leaky_relu(self.bn2(self.conv2(x)), 0.1))
-        x = self.pool3(F.leaky_relu(self.bn3(self.conv3(x)), 0.1))
+        # x = self.pool3(F.leaky_relu(self.bn3(self.conv3(x)), 0.1))
+
         # x = F.leaky_relu(self.conv1(x), 0.1)
         # x = F.leaky_relu(self.conv2(x), 0.1)
         # x = F.leaky_relu(self.conv3(x), 0.1)
@@ -211,9 +212,9 @@ class PairwiseEncodingCNN(nn.Module):
         # x = F.leaky_relu(self.conv2(x), 0.1)
         shapes["after_conv2"] = x.shape
         
-        x = self.dropout3(self.pool3(F.leaky_relu(self.bn3(self.conv3(x)), 0.1)))
+        # x = self.dropout3(self.pool3(F.leaky_relu(self.bn3(self.conv3(x)), 0.1)))
         # x = F.leaky_relu(self.conv3(x), 0.1)
-        shapes["after_conv3"] = x.shape
+        # shapes["after_conv3"] = x.shape
         
         # x = F.leaky_relu(self.conv4(x), 0.1)
         # shapes["after_conv4"] = x.shape
@@ -237,11 +238,130 @@ class PairwiseEncodingCNN(nn.Module):
         
         return x
     
+class PairwiseOneHotCNN(nn.Module):
+    """Same as PairwiseEncodingCNN but uses linear layer instead of embedding for one-hot encoded input"""
+    def __init__(
+        self, num_pairs, mirna_length, target_length, 
+        embedding_dim=4, dropout_rate=0.2, kernel_sizes=[6,5,5], 
+        filter_sizes=[128,64,32],
+    ):
+        super(PairwiseOneHotCNN, self).__init__()
+        
+        # Linear layer instead of embedding - maps from one-hot to embedding dimension
+        self.pair_linear = nn.Linear(num_pairs + 1, embedding_dim)
+        self.mirna_length = mirna_length
+        self.target_length = target_length
+        
+        self.conv1 = nn.Conv2d(embedding_dim, filter_sizes[0], kernel_size=kernel_sizes[0], padding=2)
+        self.bn1 = nn.BatchNorm2d(filter_sizes[0])
+        self.pool1 = nn.MaxPool2d(kernel_size=2)
+        self.dropout1 = nn.Dropout(dropout_rate)
+        
+        self.conv2 = nn.Conv2d(filter_sizes[0], filter_sizes[1], kernel_size=kernel_sizes[1], padding=1)
+        self.bn2 = nn.BatchNorm2d(filter_sizes[1])
+        self.pool2 = nn.MaxPool2d(kernel_size=2)
+        self.dropout2 = nn.Dropout(dropout_rate)
+        
+        self.flat_features = self._get_flat_features()
+        
+        self.fc1 = nn.Linear(self.flat_features, 30)
+        self.bn4 = nn.BatchNorm1d(30)
+        self.dropout4 = nn.Dropout(dropout_rate)
+        self.fc2 = nn.Linear(30, 1)
+        
+        # Print layer dimensions for reference
+        print("\nPairwiseOneHotCNN Layer dimensions:")
+        print(f"  Input shape: [batch_size, {mirna_length}, {target_length}, {num_pairs + 1}] (one-hot)")
+        print(f"  After linear: [batch_size, {mirna_length}, {target_length}, {embedding_dim}]")
+        print(f"  After permute: [batch_size, {embedding_dim}, {mirna_length}, {target_length}]")
+        print(f"  After conv1: [batch_size, {filter_sizes[0]}, {mirna_length}, {target_length}]")
+        print(f"  After conv2: [batch_size, {filter_sizes[1]}, {mirna_length}, {target_length}]")
+        print(f"  Flattened features: {self.flat_features}")
+        print(f"  After fc1: [batch_size, 30]")
+        print(f"  Output: [batch_size, 1]")
+        
+    def _get_flat_features(self):
+        # Create dummy one-hot input for size calculation
+        x = torch.zeros(1, self.mirna_length, self.target_length, self.pair_linear.in_features)
+        x = self.pair_linear(x)
+        x = x.permute(0, 3, 1, 2)
+        x = self.pool1(F.leaky_relu(self.bn1(self.conv1(x)), 0.1))
+        x = self.pool2(F.leaky_relu(self.bn2(self.conv2(x)), 0.1))
+        return x.numel()
+    
+    def forward(self, x):
+        # Store shapes for logging
+        shapes = {"input": x.shape}
+        
+        # Input is expected to be one-hot encoded: [batch, mirna_length, target_length, num_pairs+1]
+        x = self.pair_linear(x)
+        shapes["after_linear"] = x.shape
+        
+        x = x.permute(0, 3, 1, 2)  # Change to [batch, embedding_dim, mirna_length, target_length]
+        shapes["after_permute"] = x.shape
+        
+        x = self.dropout1(self.pool1(F.leaky_relu(self.bn1(self.conv1(x)), 0.1)))
+        shapes["after_conv1"] = x.shape
+        
+        x = self.dropout2(self.pool2(F.leaky_relu(self.bn2(self.conv2(x)), 0.1)))
+        shapes["after_conv2"] = x.shape
+        
+        x = x.contiguous().view(x.size(0), -1)
+        shapes["after_flatten"] = x.shape
+        
+        x = self.dropout4(F.leaky_relu(self.bn4(self.fc1(x)), 0.1))
+        shapes["after_fc1"] = x.shape
+        
+        x = torch.sigmoid(self.fc2(x))
+        shapes["output"] = x.shape
+        
+        # Print shapes for first forward pass
+        if not hasattr(self, 'shapes_printed'):
+            print("\nPairwiseOneHotCNN intermediate tensor shapes (first batch):")
+            for name, shape in shapes.items():
+                print(f"  {name}: {shape}")
+            self.shapes_printed = True
+        
+        return x
+    
+
+def pairwise_to_onehot(pairwise_input, num_pairs):
+    """
+    Convert pairwise integer indices to one-hot encoding format.
+    
+    Args:
+        pairwise_input: Tensor of shape [batch_size, mirna_length, target_length] 
+                       containing integer indices (0 to num_pairs)
+        num_pairs: Number of pair types (excluding 0 for padding/no-pair)
+    
+    Returns:
+        one_hot: Tensor of shape [batch_size, mirna_length, target_length, num_pairs + 1]
+                containing one-hot encoded vectors
+    """
+    # Ensure input is long tensor for one_hot function
+    pairwise_input = pairwise_input.long()
+    
+    # Create one-hot encoding
+    # F.one_hot expects the last dimension to be the class dimension
+    # and will create one-hot vectors of size num_classes
+    one_hot = F.one_hot(pairwise_input, num_classes=num_pairs + 1)
+    
+    # Convert to float for compatibility with linear layer
+    one_hot = one_hot.float()
+    
+    print(f"Original shape: {pairwise_input.shape}")
+    print(f"One-hot shape: {one_hot.shape}")
+    print(f"Value range in original: {pairwise_input.min().item()} to {pairwise_input.max().item()}")
+    
+    return one_hot
+
 
 def get_model(model_type="mirbind", **kwargs):
     """Factory function to create the specified model type"""
     if model_type == "pairwise":
         return PairwiseEncodingCNN(**kwargs)
+    elif model_type == "pairwise_onehot":
+        return PairwiseOneHotCNN(**kwargs)
     elif model_type == "mirbind":
         return MiRBindCNN(**kwargs)
     else:

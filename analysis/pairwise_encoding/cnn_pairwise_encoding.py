@@ -18,59 +18,8 @@ from optuna.trial import TrialState
 
 from utils import LogFileGenerator, pad_or_trim, encode_complementarity, log_config
 from dataset import MiRNADataset
+from models import PairwiseEncodingCNN
 
-class MiRNACNN(nn.Module):
-    def __init__(self, num_pairs, mirna_length, target_length, embedding_dim=4):
-        super(MiRNACNN, self).__init__()
-        
-        self.pair_embeddings = nn.Embedding(num_pairs + 1, embedding_dim)
-        self.mirna_length = mirna_length
-        self.target_length = target_length
-        
-        self.conv1 = nn.Conv2d(embedding_dim, 128, kernel_size=6, padding=2)
-        self.bn1 = nn.BatchNorm2d(128)
-        self.pool1 = nn.MaxPool2d(kernel_size=2)
-        self.dropout1 = nn.Dropout(0.2)
-        
-        self.conv2 = nn.Conv2d(128, 64, kernel_size=3, padding=1)
-        self.bn2 = nn.BatchNorm2d(64)
-        self.pool2 = nn.MaxPool2d(kernel_size=2)
-        self.dropout2 = nn.Dropout(0.2)
-        
-        self.conv3 = nn.Conv2d(64, 32, kernel_size=3, padding=1)
-        self.bn3 = nn.BatchNorm2d(32)
-        self.pool3 = nn.MaxPool2d(kernel_size=2)
-        self.dropout3 = nn.Dropout(0.2)
-        
-        self.flat_features = self._get_flat_features()
-        
-        self.fc1 = nn.Linear(self.flat_features, 30)
-        self.bn4 = nn.BatchNorm1d(30)
-        self.dropout4 = nn.Dropout(0.2)
-        self.fc2 = nn.Linear(30, 1)
-        
-    def _get_flat_features(self):
-        x = torch.zeros(1, self.mirna_length, self.target_length)
-        x = self.pair_embeddings(x.long())
-        x = x.permute(0, 3, 1, 2)
-        x = self.pool1(F.leaky_relu(self.bn1(self.conv1(x)), 0.1))
-        x = self.pool2(F.leaky_relu(self.bn2(self.conv2(x)), 0.1))
-        x = self.pool3(F.leaky_relu(self.bn3(self.conv3(x)), 0.1))
-        return x.numel()
-    
-    def forward(self, x):
-        x = self.pair_embeddings(x)
-        x = x.permute(0, 3, 1, 2)
-        
-        x = self.dropout1(self.pool1(F.leaky_relu(self.bn1(self.conv1(x)), 0.1)))
-        x = self.dropout2(self.pool2(F.leaky_relu(self.bn2(self.conv2(x)), 0.1)))
-        x = self.dropout3(self.pool3(F.leaky_relu(self.bn3(self.conv3(x)), 0.1)))
-        
-        x = x.contiguous().view(x.size(0), -1)
-        x = self.dropout4(F.leaky_relu(self.bn4(self.fc1(x)), 0.1))
-        x = torch.sigmoid(self.fc2(x))
-        
-        return x
 
 def train_epoch(model, train_loader, optimizer, criterion, device):
     model.train()
@@ -117,12 +66,60 @@ def evaluate(model, val_loader, device):
     auprc = auc(recall, precision)
     return total_loss / len(val_loader), auprc
 
+def suggest_architecture(trial, n_conv_layers, mirna_length, target_length):
+    # Suggest filter sizes for each layer
+    filter_sizes = []
+    kernel_sizes = []
+    
+    # Calculate initial input dimensions (after embedding)
+    current_height = mirna_length
+    current_width = target_length
+    
+    for i in range(n_conv_layers):
+        # Filter sizes increase gradually
+        min_filters = 32 * (2 ** i)  # Starting from 32, doubling each time
+        max_filters = min(256, 32 * (2 ** (i+1)))  # Cap at 512 filters
+        
+        filter_size = trial.suggest_int(f'n_filters_l{i}', min_filters, max_filters)
+        filter_sizes.append(filter_size)
+        
+        # Kernel sizes - restrict to ensure output won't be too small
+        # Calculate max kernel size that won't reduce dimensions too much
+        max_kernel = min(15, current_height - 1, current_width - 1)
+        min_kernel = min(3, max_kernel)
+        
+        if max_kernel < min_kernel:
+            raise optuna.TrialPruned("Feature map would become too small")
+        
+        kernel_size = trial.suggest_int(f'kernel_size_l{i}', min_kernel, max_kernel)
+        kernel_sizes.append(kernel_size)
+        
+        # Update dimensions for next layer
+        # For conv with padding=1 or padding=2 (first layer)
+        padding = 2 if i == 0 else 1
+        current_height = (current_height + 2*padding - kernel_size) // 2 + 1  # Account for conv and pooling
+        current_width = (current_width + 2*padding - kernel_size) // 2 + 1    # Account for conv and pooling
+        
+        # Check if dimensions are still valid
+        if current_height <= 0 or current_width <= 0:
+            raise optuna.TrialPruned("Feature map would become too small")
+    
+    # Final check to ensure there's enough information for the fully connected layer
+    if current_height * current_width * filter_sizes[-1] < 30:  # Minimum for FC layer
+        raise optuna.TrialPruned("Final feature map too small for FC layer")
+    
+    return filter_sizes, kernel_sizes
+
 def objective(trial, train_dataset, device, args):
+    # n_conv_layers = 3
+    n_conv_layers = 2
     # Suggest hyperparameters
     batch_size = trial.suggest_int('batch_size', 16, 128)
     embedding_dim = trial.suggest_int('embedding_dim', 2, 16)
     learning_rate = trial.suggest_float('learning_rate', 1e-5, 1e-2, log=True)
     dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
+    
+    filter_sizes, kernel_sizes = suggest_architecture(trial, n_conv_layers, args.mirna_length, args.target_length)
     
     # Create train/val split
     train_data, val_data = MiRNADataset.create_train_validation_split(
@@ -133,11 +130,13 @@ def objective(trial, train_dataset, device, args):
     val_loader = DataLoader(val_data, batch_size=batch_size)
     
     # Initialize model with suggested hyperparameters
-    model = MiRNACNN(
+    model = PairwiseEncodingCNN(
         num_pairs=args.num_pairs,
         mirna_length=args.mirna_length,
         target_length=args.target_length,
-        embedding_dim=embedding_dim
+        embedding_dim=embedding_dim,
+        kernel_sizes=kernel_sizes,
+        filter_sizes=filter_sizes,
     ).to(device)
     
     # Modify dropout rates
@@ -177,12 +176,12 @@ def main():
     parser = argparse.ArgumentParser(description='Train miRNA binding site prediction model with Optuna')
     
     # Dataset parameters
-    parser.add_argument('--train_file', type=str, default="AGO2_eCLIP_Manakov2022_train.tsv")
+    parser.add_argument('--train_file', type=str, default="../../data/chimeric_datasets/Manakov2022_flat/AGO2_eCLIP_Manakov2022_train.tsv")
     parser.add_argument('--target_length', type=int, default=50)
     parser.add_argument('--mirna_length', type=int, default=25)
-    parser.add_argument('--num_epochs', type=int, default=30)
+    parser.add_argument('--num_epochs', type=int, default=5)
     parser.add_argument('--val_fraction', type=float, default=0.1)
-    parser.add_argument('--n_trials', type=int, default=100)
+    parser.add_argument('--n_trials', type=int, default=10)
     parser.add_argument('--study_name', type=str, default='mirna_optimization')
     
     args = parser.parse_args()

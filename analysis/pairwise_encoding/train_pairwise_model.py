@@ -10,11 +10,11 @@ import os
 import json
 from datetime import datetime
 
-from models import get_model
-from dataset import MiRNADataset
+from models import get_model, pairwise_to_onehot
+from dataset import MiRNADataset, MiRNAOneHotDataset
 
 
-def train_epoch(model, train_loader, optimizer, criterion, device):
+def train_epoch(model, train_loader, optimizer, criterion, device, model_type):
     model.train()
     total_loss = 0
     all_train_preds = []
@@ -153,6 +153,7 @@ def main():
     parser.add_argument('--kernel_sizes', type=str, default='6,3,3', help='Comma-separated list of kernel sizes')
     parser.add_argument('--patience', type=int, default=5, help='Patience for early stopping')
     parser.add_argument('--output_dir', type=str, default='model_outputs', help='Directory to save model outputs')
+    parser.add_argument('--model', type=str, default='pairwise', help='Model architecture')
     
     args = parser.parse_args()
     
@@ -174,9 +175,16 @@ def main():
     
     # Add a padding token
     pair_to_index[('N', 'N')] = len(pair_to_index)
-    
+
+    if (args.model == "pairwise"):
+        Dataset_obj = MiRNADataset
+    elif (args.model == "pairwise_onehot"):
+        Dataset_obj = MiRNAOneHotDataset
+    else:
+        raise ValueError("Invalid input of MODEL parameter")
+        
     # Initialize dataset
-    full_dataset = MiRNADataset(
+    full_dataset = Dataset_obj(
         args.train_file,
         args.target_length,
         args.mirna_length,
@@ -185,7 +193,7 @@ def main():
     )
     
     # Create train/val split
-    train_dataset, val_dataset = MiRNADataset.create_train_validation_split(
+    train_dataset, val_dataset = Dataset_obj.create_train_validation_split(
         full_dataset, validation_fraction=args.val_fraction
     )
     
@@ -234,11 +242,16 @@ def main():
         'dropout_rate': args.dropout_rate,
         # 'n_conv_layers': args.n_conv_layers,
         'filter_sizes': filter_sizes,
-        'kernel_sizes': kernel_sizes
+        'kernel_sizes': kernel_sizes,
     }
     
     # Initialize model
-    model = get_model("pairwise", **model_params).to(device)
+    if (args.model == "pairwise"):
+        model = get_model("pairwise", **model_params).to(device)
+    elif (args.model == "pairwise_onehot"):
+        model = get_model("pairwise_onehot", **model_params).to(device)
+    else:
+        raise ValueError("Invalid input of MODEL parameter")
     
     # Log model architecture
     print("\nModel Architecture:")
@@ -277,7 +290,7 @@ def main():
     criterion = nn.BCELoss()
     
     # Load test datasets
-    test_dataset1 = MiRNADataset(
+    test_dataset1 = Dataset_obj(
         args.test_file1,
         args.target_length,
         args.mirna_length,
@@ -285,7 +298,7 @@ def main():
         num_pairs=len(pair_to_index)
     )
     
-    test_dataset2 = MiRNADataset(
+    test_dataset2 = Dataset_obj(
         args.test_file2,
         args.target_length,
         args.mirna_length,
@@ -315,7 +328,7 @@ def main():
     }
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    model_save_path = os.path.join(args.output_dir, f"pairwise_model_{timestamp}.pt")
+    model_save_path = os.path.join(args.output_dir, f"{args.model}_model_{timestamp}.pt")
     
     # Save architecture summary
     architecture_file = os.path.join(args.output_dir, f"architecture_summary_{timestamp}.json")
@@ -325,7 +338,7 @@ def main():
     
     print("Starting training...")
     for epoch in range(args.num_epochs):
-        train_loss, train_auprc = train_epoch(model, train_loader, optimizer, criterion, device)
+        train_loss, train_auprc = train_epoch(model, train_loader, optimizer, criterion, device, args.model)
         val_loss, val_auprc = evaluate(model, val_loader, criterion, device)
         
         # Evaluate on test sets
