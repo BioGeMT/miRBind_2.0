@@ -13,7 +13,7 @@ The data processing pipeline transforms raw miRNA binding data into family-speci
 ## Files
 
 ### Scripts
-- `annotate_dataset.py` - Maps miRNA sequences to families using MirGeneDB reference
+- `annotate_dataset.py` - Maps miRNA sequences to families using MirGeneDB reference. Keeps all rows and fills missing `mirgenedb_name`, `mirgenedb_id`, and `mirgenedb_fam` with `unknown`.
 - `count_fams.py` - Counts occurrences of each miRNA family
 - `split_fams.py` - Splits annotated data into family-specific files
 - `prepare_datasets.sh` - Main pipeline script that orchestrates all steps
@@ -40,6 +40,9 @@ python annotate_dataset.py \
   --mirgenedb mirgenedb_family_mappings.tsv \
   --output annotated_data.tsv
 ```
+Notes:
+- Input TSV must contain a `noncodingRNA` column with the sequence.
+- Rows with no match or missing family are retained with `unknown` labels.
 
 2. **Count families:**
 ```bash
@@ -64,7 +67,7 @@ The pipeline produces:
 
 ## Requirements
 
-- Input TSV file with miRNA sequences and conservation scores
+- Input TSV file with miRNA sequences and conservation scores (must include `noncodingRNA` column)
 - MirGeneDB reference files for family mapping
 - Sufficient samples per family (default threshold: 1000)
 
@@ -91,10 +94,4 @@ pairwise_cnn_conservation/
         └── Data processing scripts
 ```
 
-The family-specific scripts import shared components (models.py, dataset.py, utils.py) from the parent directory, ensuring consistency between pairwise and family-specific approaches.
 
-## Analysis Scripts
-
-For convenient execution, use the analysis scripts in the project root:
-- `../../../../analysis/train_pairwise_model.sh` - Standard pairwise training
-- `../../../../analysis/train_family_models.sh` - Family-specific training

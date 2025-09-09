@@ -26,7 +26,7 @@ A CNN model for miRNA binding site prediction incorporating evolutionary conserv
 ### Data Annotation (`annotate_dataset.py`)
 Maps miRNA sequences to families using MirGeneDB references:
 - Matches sequences against FASTA to identify miRNAs
-- Adds mirgenedb annotations
+- Adds mirgenedb annotations; keeps all rows and labels missing IDs/names/families as `unknown`
 
 ### Dataset splitting (`count_fams.py` and `split_fams.py`)
 - Counts family occurrences in annotated data
@@ -85,4 +85,3 @@ python single_family_eval.py \
 For convenient execution, use the analysis scripts:
 - `../../../analysis/train_pairwise_model.sh` - Standard pairwise training
 - `../../../analysis/train_family_models.sh` - Family-specific training
-
