@@ -111,3 +111,8 @@ Input TSV with columns:
 The model encodes miRNA-mRNA interactions as 2D matrices where each cell represents a nucleotide pair. A CNN extracts features from these matrices to predict binding probability.
 
 SHAP values are computed using GradientShap (Captum) and reduced from 3D (one-hot) to 2D (miRNA × mRNA positions) for interpretability.
+
+### Computational Differences or the two models (PairwiseEncodingCNN, PairwiseOneHotCNN):
+- Memory: OneHot version uses ~17× more memory per sample (assuming 17 pairs)
+- Speed: Embedding lookup is typically faster than matrix multiplication with sparse one-hot vectors
+- Gradients: OneHot version provides better gradient flow for SHAP, which is why the README recommends it for explainability
