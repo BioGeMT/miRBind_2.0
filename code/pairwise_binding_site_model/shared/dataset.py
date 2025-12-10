@@ -1,14 +1,16 @@
 import torch
-import pandas as pd
 import torch.nn.functional as F
-import numpy as np
-from torch.utils.data import Dataset, DataLoader, random_split
+import pandas as pd
+from torch.utils.data import Dataset, random_split
 
-from utils import pad_or_trim, encode_complementarity
+from .encoding import pad_or_trim, encode_complementarity
 
 
 class MiRNADataset(Dataset):
-    def __init__(self, file_path, target_length, mirna_length, pair_to_index, num_pairs, fraction=1.0):
+    """Dataset producing integer-encoded complementarity matrices."""
+    
+    def __init__(self, file_path, target_length, mirna_length, pair_to_index,
+                 num_pairs, fraction=1.0):
         df = pd.read_csv(file_path, sep="\t")
         if fraction < 1.0:
             df = df.sample(frac=fraction, random_state=42).reset_index(drop=True)
@@ -20,33 +22,37 @@ class MiRNADataset(Dataset):
         self.mirna_length = mirna_length
         self.pair_to_index = pair_to_index
         self.num_pairs = num_pairs
-        
+
     def __len__(self):
         return len(self.labels)
-    
+
     def __getitem__(self, idx):
         t_seq = pad_or_trim(self.target_seqs[idx], self.target_length)
         m_seq = pad_or_trim(self.mirna_seqs[idx], self.mirna_length)
-        X = torch.tensor(encode_complementarity(t_seq, m_seq, self.target_length, 
-                                             self.mirna_length, self.pair_to_index, 
-                                             self.num_pairs), dtype=torch.long)
-        return X, self.labels[idx]
         
+        X = torch.tensor(
+            encode_complementarity(t_seq, m_seq, self.target_length,
+                                  self.mirna_length, self.pair_to_index,
+                                  self.num_pairs),
+            dtype=torch.long
+        )
+        return X, self.labels[idx]
+
     @staticmethod
     def create_train_validation_split(dataset, validation_fraction=0.1):
         val_size = int(len(dataset) * validation_fraction)
         train_size = len(dataset) - val_size
-        train_dataset, val_dataset = random_split(
-            dataset, 
-            [train_size, val_size],
+        return random_split(
+            dataset, [train_size, val_size],
             generator=torch.Generator().manual_seed(42)
         )
-        return train_dataset, val_dataset
-    
+
 
 class MiRNAOneHotDataset(Dataset):
-    """Dataset that produces one-hot encoded complementarity matrices for PairwiseOneHotCNN"""
-    def __init__(self, file_path, target_length, mirna_length, pair_to_index, num_pairs, fraction=1.0):
+    """Dataset producing one-hot encoded complementarity matrices."""
+    
+    def __init__(self, file_path, target_length, mirna_length, pair_to_index,
+                 num_pairs, fraction=1.0):
         df = pd.read_csv(file_path, sep="\t")
         if fraction < 1.0:
             df = df.sample(frac=fraction, random_state=42).reset_index(drop=True)
@@ -58,32 +64,40 @@ class MiRNAOneHotDataset(Dataset):
         self.mirna_length = mirna_length
         self.pair_to_index = pair_to_index
         self.num_pairs = num_pairs
-        
+
     def __len__(self):
         return len(self.labels)
-    
+
     def __getitem__(self, idx):
         t_seq = pad_or_trim(self.target_seqs[idx], self.target_length)
         m_seq = pad_or_trim(self.mirna_seqs[idx], self.mirna_length)
         
-        # Get integer indices first (same as original dataset)
-        indices = torch.tensor(encode_complementarity(t_seq, m_seq, self.target_length, 
-                                                    self.mirna_length, self.pair_to_index, 
-                                                    self.num_pairs), dtype=torch.long)
-        
-        # Convert to one-hot encoding
+        indices = torch.tensor(
+            encode_complementarity(t_seq, m_seq, self.target_length,
+                                  self.mirna_length, self.pair_to_index,
+                                  self.num_pairs),
+            dtype=torch.long
+        )
         # Shape: [mirna_length, target_length, num_pairs + 1]
         X_onehot = F.one_hot(indices, num_classes=self.num_pairs + 1).float()
-        
         return X_onehot, self.labels[idx]
-        
+
     @staticmethod
     def create_train_validation_split(dataset, validation_fraction=0.1):
         val_size = int(len(dataset) * validation_fraction)
         train_size = len(dataset) - val_size
-        train_dataset, val_dataset = random_split(
-            dataset, 
-            [train_size, val_size],
+        return random_split(
+            dataset, [train_size, val_size],
             generator=torch.Generator().manual_seed(42)
         )
-        return train_dataset, val_dataset
+
+
+def get_dataset_class(model_type):
+    """Returns appropriate dataset class for the model type."""
+    datasets = {
+        "pairwise": MiRNADataset,
+        "pairwise_onehot": MiRNAOneHotDataset,
+    }
+    if model_type not in datasets:
+        raise ValueError(f"Unknown model type: {model_type}")
+    return datasets[model_type]
