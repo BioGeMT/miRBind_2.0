@@ -5,27 +5,45 @@ Deep learning pipeline for predicting miRNA-mRNA binding sites using pairwise CN
 ## Structure
 
 ```
-pairwise_binding_site_model/
-├── shared/              # Core components
-│   ├── constants.py     # Nucleotide pairs, colors, device utilities
-│   ├── encoding.py      # Sequence encoding functions
-│   ├── dataset.py       # PyTorch datasets
-│   └── models.py        # CNN architectures
-├── training/            # Training & evaluation
-│   ├── train.py         # Training with early stopping
-│   └── evaluate.py      # Model evaluation
-├── inference/           # Prediction & SHAP computation
-│   ├── predict.py       # Basic inference
-│   └── explainability.py # GradientShap computation
-├── explainability/      # SHAP analysis pipeline
-│   ├── shap_utils.py    # SHAP utilities
-│   ├── clustering.py    # K-means/GMM clustering
-│   ├── plotting.py      # Visualization functions
-│   └── aggregate.py     # miRNA importance aggregation
-└── scripts/             # Shell scripts
+code/pairwise_binding_site_model/
+
+
+├── analysis/
+│   └── pairwise_binding_site_model/
+│       ├── train.sh
+│       ├── inference.sh
+│       ├── inference_explainability.sh
+│       ├── clustering.sh
+│       └── aggregate.sh
+└── code/
+    └── pairwise_binding_site_model/
+        ├── shared/              # Core components
+        │   ├── constants.py     # Nucleotide pairs, colors, device utilities
+        │   ├── encoding.py      # Sequence encoding functions
+        │   ├── dataset.py       # PyTorch datasets
+        │   └── models.py        # CNN architectures
+        ├── training/            # Training & evaluation
+        │   ├── train.py         # Training with early stopping
+        │   └── evaluate.py      # Model evaluation
+        ├── inference/           # Prediction & SHAP computation
+        │   ├── predict.py       # Basic inference
+        │   └── explainability.py # GradientShap computation
+        └── explainability/      # SHAP analysis pipeline
+            ├── shap_utils.py    # SHAP utilities
+            ├── clustering.py    # K-means/GMM clustering
+            ├── plotting.py      # Visualization functions
+            └── aggregate.py     # miRNA importance aggregation
+
+
 ```
 
 ## Installation
+
+```bash
+conda env create -f environment. yml
+```
+
+or
 
 ```bash
 pip install -r requirements.txt
