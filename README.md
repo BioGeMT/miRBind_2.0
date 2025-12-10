@@ -4,12 +4,13 @@ Repository for ML tools for miRNA binding site prediction.
 
 ### Structure of the repository:
 
-- `code` - Folder with plain scripts, that can work on their own and are reusable. Example of such a script is *specific encoder for the miRNA:mRNA sequences*; or a *random Forest training script*.
-- `analysis` - Folder with directory per each specific analysis, eg. *training of Random Forest on K mer encoding of Manakov 1:1 dataset*. Each of this specific analysis will contain one master script, that will reproduce the whole analysis that was performed. 
+- `code` - Folder with plain scripts, that can work on their own and are reusable. The types of scripts that belong to this folder are f.e. _**encoders, model definitions, scripts to compute metrics, and plotting scripts**_. Examples of such a script include a *specific encoder for miRNA:mRNA sequences* and a *random Forest training script*.
+- `analysis` - Folder with a directory for each specific analysis, eg. *training of Random Forest on K mer encoding of Manakov 1:1 dataset*. Each of these specific analyses will contain one master script that will reproduce the whole analysis that was performed. 
 You can also use your analysis folder as a playground (eg. for hyperparameter optimization or trying different architectures), but the master script should run just the final analysis.
 Store here intermediate results too, when running the analysis (like encoded datasets or prediction files), but please don't commit them.
 All the scripts in this folder should not be code-heavy, they should use code chunks already available in the `code` directory. 
-Use custom code pieces only for parts that are very specific fo your analysis and not reusable. 
+Use custom code pieces only for parts that are very specific fo your analysis and not reusable.
+Add requirements.txt/yaml.
 - `data` - Placeholder empty folder, that locally contains all the datasets used for model trainings etc.
 Here on GitHub it contains just a script that when executed will download the datasets and put them in a proper folder structure.
 - `models` - Placeholder empty folder, similar to the `data` folder. Contains a script that downloads the trained models.
@@ -33,3 +34,27 @@ It might happen that you eg. find a bug or want to make faster some of the share
 Then change the code, but also make sure to find all its usages in the `analysis` folder and update them accordingly / rerun the analysis / put there a flag (maybe an issue) so people know that their results might be outdated.
 
 The same thing applies when there is an update in a **dataset** or to a **model**.
+
+### Models leaderboard
+
+Here we track the performance of ML models across Manakov22 test and leftout datasets. Models are ranked based on the sum(AUPRC(test), AUPRC(leftout)).
+
+#### Leaderboard
+
+| Rank | Model                              | AUPRC(test)  | AUPRC(leftout) | link to model  | link to code  | date  | authors  |
+|------|------------------------------------|--------------|----------------|----------------|---------------|---------------|---------------|
+| 1    | Pairwise encoding with conservation (+2 channels)  | 85.93         | 82.26           | [model](https://drive.google.com/drive/folders/17pGBXqX7aoH_KyyoulRa3zFegzRB2P2q?usp=drive_link) | [code](https://github.com/BioGeMT/miRBind_2.0/tree/dimos/conservation_channels/code/pairwise_cnn_conservation) | 27/03/2025 | Dimos, David, Panos |
+| 2    | Pairwise encoding CNN              | 84.97        | 83.08          | [model](https://drive.google.com/drive/folders/1dFsm0CcC7WL2mP4h5a6UZtVt57ICH3vB?usp=drive_link) | [code](https://github.com/BioGeMT/miRBind_2.0/tree/david/CNN_pairwise_encoding/analysis/pairwise_encoding) | 19/03/2025 | David, Panos |
+| 3    | retrained miRBind CNN (published in miRBench)  | 84.00        | 81.00          | LINK | LINK | 19/03/2025 | Eva? |
+| 4    | TargetScanCNN                      | 77.00        | 76.00          | LINK | LINK | 19/03/2025 | TargetScan |
+| 5    | ...                                | 00.0         | 00.0           | LINK | LINK | DATE | AUTHOR |
+| 6    | ...                                | 00.0         | 00.0           | LINK | LINK | DATE | AUTHOR |
+| 7    | ...                                | 00.0         | 00.0           | LINK | LINK | DATE | AUTHOR |
+| 8    | ...                                | 00.0         | 00.0           | LINK | LINK | DATE | AUTHOR |
+| 9    | ...                                | 00.0         | 00.0           | LINK | LINK | DATE | AUTHOR |
+
+#### How to add your model
+
+1. Push your code to reproduce and evaluate the model to GitHub
+2. Create a new folder for your trained model in [Google Drive](https://drive.google.com/drive/folders/1IH7_CjxWW7Q0dKEFJY3L3yo4B2WWxJh2?usp=drive_link) and upload it
+3. Fill in the table with metrics and links to the model and code (the path to the folder containing the code and guidelines to run it is sufficient)

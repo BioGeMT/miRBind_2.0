@@ -1,0 +1,17 @@
+
+name: pairwise-conservation
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - numpy=1.26.4
+  - pandas=2.2.2
+  - scikit-learn=1.4.2
+  - matplotlib=3.8.4
+  - pytorch::pytorch=2.2.2
+  - pytorch-cuda=12.1
+  - pip
+
