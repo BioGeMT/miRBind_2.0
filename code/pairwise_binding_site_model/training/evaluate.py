@@ -1,6 +1,6 @@
 import argparse
 import os
-from datetime import datetime
+import sys
 
 import torch
 import numpy as np
@@ -11,7 +11,6 @@ from sklearn.metrics import (
     accuracy_score, confusion_matrix
 )
 
-import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from shared import load_model, get_dataset_class, get_pair_to_index, get_device

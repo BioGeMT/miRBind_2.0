@@ -1,11 +1,11 @@
 import argparse
 import os
+import sys
 
 import torch
 import pandas as pd
 from torch.utils.data import DataLoader
 
-import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from shared import load_model, get_dataset_class, get_pair_to_index, get_device
