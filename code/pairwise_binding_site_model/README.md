@@ -37,6 +37,11 @@ code/pairwise_binding_site_model/
 
 ```
 
+## Set up
+1) Install env 
+2) Run data/scripts/run_zenodo_downloader.sh
+3) Ready to run analysis scripts - train, inference (with explainability), aggregate, clustering
+
 ## Installation
 
 ```bash
