@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CODE_DIR="${SCRIPT_DIR}/../../code/pairwise_binding_site_model"
 
 MODEL_PATH="model_outputs/pairwise_onehot_model_YYYYMMDD_HHMMSS.pt"
-INPUT_FILE="../../data/chimeric_datasets/Manakov2022_flat/AGO2_eCLIP_Manakov2022_test.tsv"
+INPUT_FILE="../../data/chimeric_datasets/AGO2_eCLIP_Manakov2022_test.tsv"
 OUTPUT_FILE="shap_results_$(date +%Y%m%d_%H%M%S).tsv"
 
 cd "${CODE_DIR}"

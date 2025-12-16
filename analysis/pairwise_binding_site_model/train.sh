@@ -4,9 +4,13 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CODE_DIR="${SCRIPT_DIR}/../../code/pairwise_binding_site_model"
 
-TRAIN_FILE="../../data/chimeric_datasets/Manakov2022_flat/AGO2_eCLIP_Manakov2022_train.tsv"
-TEST_FILE_1="../../data/chimeric_datasets/Manakov2022_flat/AGO2_eCLIP_Manakov2022_test.tsv"
-TEST_FILE_2="../../data/chimeric_datasets/Manakov2022_flat/AGO2_eCLIP_Manakov2022_leftout.tsv"
+TRAIN_FILE="../../data/chimeric_datasets/AGO2_eCLIP_Manakov2022_train.tsv"
+TEST_FILE_1="../../data/chimeric_datasets/AGO2_eCLIP_Manakov2022_test.tsv"
+TEST_FILE_2="../../data/chimeric_datasets/AGO2_eCLIP_Manakov2022_leftout.tsv"
+
+# TRAIN_FILE="../../data/chimeric_datasets/Manakov2022_flat/AGO2_eCLIP_Manakov2022_train.tsv"
+# TEST_FILE_1="../../data/chimeric_datasets/Manakov2022_flat/AGO2_eCLIP_Manakov2022_test.tsv"
+# TEST_FILE_2="../../data/chimeric_datasets/Manakov2022_flat/AGO2_eCLIP_Manakov2022_leftout.tsv"
 
 cd "${CODE_DIR}"
 
