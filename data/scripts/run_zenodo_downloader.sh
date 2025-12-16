@@ -1,0 +1,1 @@
+python zenodo_downloader.py 14734014 -f Manakov2022_train -f Manakov2022_test -f Manakov2022_leftout --output-dir ./../chimeric_datasets/ --unzip
