@@ -8,7 +8,7 @@ import torch.nn as nn
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 import numpy as np
-from sklearn.metrics import precision_recall_curve, auc
+from sklearn.metrics import precision_recall_curve, auc, average_precision_score
 import matplotlib.pyplot as plt
 
 import sys
@@ -36,7 +36,9 @@ def train_epoch(model, train_loader, optimizer, criterion, device):
         all_labels.extend(batch_y.cpu().numpy())
     
     precision, recall, _ = precision_recall_curve(all_labels, all_preds)
-    return total_loss / len(train_loader), auc(recall, precision)
+    auprc = auc(recall, precision)
+    aps = average_precision_score(all_labels, all_preds)
+    return total_loss / len(train_loader), auprc, aps
 
 
 def evaluate(model, data_loader, criterion, device):
@@ -54,41 +56,51 @@ def evaluate(model, data_loader, criterion, device):
             all_labels.extend(batch_y.cpu().numpy())
     
     precision, recall, _ = precision_recall_curve(all_labels, all_preds)
-    return total_loss / len(data_loader), auc(recall, precision)
+    auprc = auc(recall, precision)
+    aps = average_precision_score(all_labels, all_preds)
+    return total_loss / len(data_loader), auprc, aps
 
 
 def plot_training_history(history, output_dir, timestamp):
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     
-    axes[0, 0].plot(history['train_loss'], label='Train')
-    axes[0, 0].plot(history['val_loss'], label='Val')
-    axes[0, 0].set_title('Loss')
-    axes[0, 0].set_xlabel('Epoch')
-    axes[0, 0].legend()
+    axes[0].plot(history['train_loss'], label='Train')
+    axes[0].plot(history['val_loss'], label='Val')
+    axes[0].set_title('Loss')
+    axes[0].set_xlabel('Epoch')
+    axes[0].legend()
     
-    axes[0, 1].plot(history['test1_loss'], label='Test1')
-    axes[0, 1].plot(history['test2_loss'], label='Test2')
-    axes[0, 1].set_title('Test Loss')
-    axes[0, 1].set_xlabel('Epoch')
-    axes[0, 1].legend()
-    
-    axes[1, 0].plot(history['train_auprc'], label='Train')
-    axes[1, 0].plot(history['val_auprc'], label='Val')
-    axes[1, 0].set_title('AUPRC')
-    axes[1, 0].set_xlabel('Epoch')
-    axes[1, 0].legend()
-    
-    axes[1, 1].plot(history['test1_auprc'], label='Test1')
-    axes[1, 1].plot(history['test2_auprc'], label='Test2')
-    axes[1, 1].set_title('Test AUPRC')
-    axes[1, 1].set_xlabel('Epoch')
-    axes[1, 1].legend()
+    axes[1].plot(history['train_auprc'], label='Train')
+    axes[1].plot(history['val_auprc'], label='Val')
+    axes[1].set_title('AUPRC')
+    axes[1].set_xlabel('Epoch')
+    axes[1].legend()
     
     plt.tight_layout()
     plot_path = os.path.join(output_dir, f"training_plots_{timestamp}.png")
     plt.savefig(plot_path)
     plt.close()
     return plot_path
+
+
+def get_architecture_summary(model, model_type, model_params):
+    """Generate architecture summary dictionary."""
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    
+    return {
+        "model_type": model_type,
+        "num_pairs": model_params['num_pairs'],
+        "mirna_length": model_params['mirna_length'],
+        "target_length": model_params['target_length'],
+        "embedding_dim": model_params['embedding_dim'],
+        "dropout_rate": model_params['dropout_rate'],
+        "filter_sizes": model_params['filter_sizes'],
+        "kernel_sizes": model_params['kernel_sizes'],
+        "total_params": total_params,
+        "trainable_params": trainable_params,
+        "model_summary": str(model)
+    }
 
 
 def parse_args():
@@ -176,30 +188,27 @@ def main():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     model_save_path = os.path.join(args.output_dir, f"{args.model}_model_{timestamp}.pt")
     
-    history = {k: [] for k in ['train_loss', 'train_auprc', 'val_loss', 'val_auprc',
-                               'test1_loss', 'test1_auprc', 'test2_loss', 'test2_auprc']}
+    history = {k: [] for k in ['train_loss', 'train_auprc', 'train_aps', 
+                               'val_loss', 'val_auprc', 'val_aps']}
     
     best_val_auprc = 0
+    best_epoch = 0
     patience_counter = 0
     
     for epoch in range(args.num_epochs):
-        train_loss, train_auprc = train_epoch(model, train_loader, optimizer, criterion, device)
-        val_loss, val_auprc = evaluate(model, val_loader, criterion, device)
-        test1_loss, test1_auprc = evaluate(model, test_loader1, criterion, device)
-        test2_loss, test2_auprc = evaluate(model, test_loader2, criterion, device)
+        train_loss, train_auprc, train_aps = train_epoch(model, train_loader, optimizer, criterion, device)
+        val_loss, val_auprc, val_aps = evaluate(model, val_loader, criterion, device)
         
-        for key, value in [('train_loss', train_loss), ('train_auprc', train_auprc),
-                           ('val_loss', val_loss), ('val_auprc', val_auprc),
-                           ('test1_loss', test1_loss), ('test1_auprc', test1_auprc),
-                           ('test2_loss', test2_loss), ('test2_auprc', test2_auprc)]:
+        for key, value in [('train_loss', train_loss), ('train_auprc', train_auprc), ('train_aps', train_aps),
+                           ('val_loss', val_loss), ('val_auprc', val_auprc), ('val_aps', val_aps)]:
             history[key].append(value)
         
         print(f"Epoch {epoch+1}/{args.num_epochs} | "
-              f"Train: {train_auprc:.4f} | Val: {val_auprc:.4f} | "
-              f"Test1: {test1_auprc:.4f} | Test2: {test2_auprc:.4f}")
+              f"Train: {train_auprc:.4f}/{train_aps:.4f} | Val: {val_auprc:.4f}/{val_aps:.4f}")
         
         if val_auprc > best_val_auprc:
             best_val_auprc = val_auprc
+            best_epoch = epoch
             patience_counter = 0
             torch.save({
                 'epoch': epoch,
@@ -214,19 +223,32 @@ def main():
                 print(f"Early stopping at epoch {epoch+1}")
                 break
     
+    # Load best model and evaluate on test sets
+    checkpoint = torch.load(model_save_path)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    
+    _, val_auprc, val_aps = evaluate(model, val_loader, criterion, device)
+    _, test1_auprc, test1_aps = evaluate(model, test_loader1, criterion, device)
+    _, test2_auprc, test2_aps = evaluate(model, test_loader2, criterion, device)
+    
+    # Add best model info and architecture summary to history
+    history['best_epoch'] = best_epoch
+    history['best_val_auprc'] = best_val_auprc
+    history['final_test1_auprc'] = test1_auprc
+    history['final_test2_auprc'] = test2_auprc
+    history['final_test1_aps'] = test1_aps
+    history['final_test2_aps'] = test2_aps
+    history['architecture_summary'] = get_architecture_summary(model, args.model, model_params)
+    
     with open(os.path.join(args.output_dir, f"history_{timestamp}.json"), 'w') as f:
         json.dump(history, f, indent=2)
     
     plot_training_history(history, args.output_dir, timestamp)
     
-    checkpoint = torch.load(model_save_path)
-    model.load_state_dict(checkpoint['model_state_dict'])
-    _, val_auprc = evaluate(model, val_loader, criterion, device)
-    _, test1_auprc = evaluate(model, test_loader1, criterion, device)
-    _, test2_auprc = evaluate(model, test_loader2, criterion, device)
-    
     print(f"\nBest model (epoch {checkpoint['epoch']+1}):")
-    print(f"  Val: {val_auprc:.4f}, Test1: {test1_auprc:.4f}, Test2: {test2_auprc:.4f}")
+    print(f"  Val:   AUPRC={val_auprc:.4f}, APS={val_aps:.4f}")
+    print(f"  Test1: AUPRC={test1_auprc:.4f}, APS={test1_aps:.4f}")
+    print(f"  Test2: AUPRC={test2_auprc:.4f}, APS={test2_aps:.4f}")
     print(f"  Saved to: {model_save_path}")
 
 
