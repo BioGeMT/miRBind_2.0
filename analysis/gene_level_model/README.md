@@ -16,14 +16,14 @@ Optional features: Layer Normalization, discriminative learning rates (lower LR 
 
 ```
 code/gene_level_model/
-├── shared/                    # Core components
+├── shared/                    
 │   ├── __init__.py
-│   ├── encoding.py            # Nucleotide one-hot encoding
+│   ├── encoding.py            
 │   ├── dataset.py             # GeneLevelDataset (TSV/pickle → PyTorch)
-│   └── model.py               # GeneRepressionModelV4, MultiHeadSpatialAttention
-└── training/                  # Training & evaluation scripts
+│   └── model.py               
+└── training/                  
     ├── __init__.py
-    ├── train.py               # Training with early stopping
+    ├── train.py               
     └── evaluate.py            # Evaluation with competitor comparison
 
 analysis/gene_level_model/
