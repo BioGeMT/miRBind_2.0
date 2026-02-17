@@ -17,5 +17,5 @@ python "${CODE_DIR}/evaluate.py" \
     --competitor_cols "weighted context++ score" "context++ score" \
     --competitor_name "TargetScan Weighted Context++ Score" "TargetScan Context++ Score"\
     --output_dir "${OUTPUT_DIR}" \
-    --model_name "V4 Model - pretrained, Discriminative LR + Layer Norm (unfrozen) - 20260113_191228" \
+    --model_name "V4 Model - pretrained, Discriminative LR + Layer Norm (unfrozen) - 20260217_142557" \
     --fill_empty_preds_with_zero
