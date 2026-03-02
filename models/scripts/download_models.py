@@ -1,1 +1,0 @@
-# this script downloads the models and saves them in the models folder
