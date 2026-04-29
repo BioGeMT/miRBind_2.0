@@ -1,60 +1,107 @@
 # miRBind 2.0
 
-Repository for ML tools for miRNA binding site prediction.
+Deep-learning models for predicting miRNA–mRNA interactions.
 
-### Structure of the repository:
+This repository ships two models:
 
-- `code` - Folder with plain scripts, that can work on their own and are reusable. The types of scripts that belong to this folder are f.e. _**encoders, model definitions, scripts to compute metrics, and plotting scripts**_. Examples of such a script include a *specific encoder for miRNA:mRNA sequences* and a *random Forest training script*.
-- `analysis` - Folder with a directory for each specific analysis, eg. *training of Random Forest on K mer encoding of Manakov 1:1 dataset*. Each of these specific analyses will contain one master script that will reproduce the whole analysis that was performed. 
-You can also use your analysis folder as a playground (eg. for hyperparameter optimization or trying different architectures), but the master script should run just the final analysis.
-Store here intermediate results too, when running the analysis (like encoded datasets or prediction files), but please don't commit them.
-All the scripts in this folder should not be code-heavy, they should use code chunks already available in the `code` directory. 
-Use custom code pieces only for parts that are very specific fo your analysis and not reusable.
-Add requirements.txt/yaml.
-- `data` - Placeholder empty folder, that locally contains all the datasets used for model trainings etc.
-Here on GitHub it contains just a script that when executed will download the datasets and put them in a proper folder structure.
-- `models` - Placeholder empty folder, similar to the `data` folder. Contains a script that downloads the trained models.
+- **Pairwise binding-site model** — a CNN that predicts whether a given miRNA binds a given target site (≈50 nt window). Use this to score candidate binding sites.
+- **Gene-level repression model** — predicts the gene-level fold change a miRNA induces from a full 3'UTR sequence. Built on top of the binding-site model via transfer learning.
 
+## Installation
 
-### How to work:
+Clone the repo and install the dependencies (Python ≥ 3.9, PyTorch ≥ 1.9):
 
-Create a new branch, work there, and when you are ready, clean it up and create a pull request to the main branch.
+```bash
+git clone https://github.com/BioGeMT/miRBind_2.0.git
+cd miRBind_2.0
+pip install -r code/pairwise_binding_site_model/requirements.txt
+```
 
-##### Scenario 1: adding shared utility
-If you want to add a new utility (like data encoder, model architecture, evaluation script) that can be used by others, put it in the `code` folder.
-Make it ideally a plain python script, that can be run on its own and is reusable.
+A GPU is recommended but not required — the models will fall back to CPU automatically.
 
-##### Scenario 2: creating a new analysis
-You might already have all the chunks you need coded and you want to just unite them into a single analysis. Or you might want to experiment a bit.
-Then create a folder in the `analysis` folder with a descriptive name of the analysis you are doing. 
-You can try there for example different hyperparameter settings or different training dataset ratios. But at the end, you should have a master script that will run the final pipeline with specific settings and produce one consistent result.
+## Quick start: predicting miRNA binding sites
 
-#### Scenario 3: changing shared utility / dataset / model
-It might happen that you eg. find a bug or want to make faster some of the shared code pieces in the `code` folder. 
-Then change the code, but also make sure to find all its usages in the `analysis` folder and update them accordingly / rerun the analysis / put there a flag (maybe an issue) so people know that their results might be outdated.
+The trained binding-site model is included in [models/pairwise_onehot_model_20260105_200141.pt](models/pairwise_onehot_model_20260105_200141.pt).
 
-The same thing applies when there is an update in a **dataset** or to a **model**.
+### 1. Prepare your input
 
-### Models leaderboard
+A TSV file with at minimum these columns:
 
-Here we track the performance of ML models across Manakov22 test and leftout datasets. Models are ranked based on the sum(AUPRC(test), AUPRC(leftout)).
+| column 0 (target/mRNA) | column 1 (miRNA) | label |
+|---|---|---|
+| `TTTTTTTT...GACAGTGG` | `TGTGCAAATCTATGCAAAACTGA` | 0 |
 
-#### Leaderboard
+The `label` column is required by the data loader but is ignored at inference. Set it to `0` if you don't have ground truth. A small example is provided in [data/chimeric_datasets/sample_dataset/](data/chimeric_datasets/sample_dataset/).
 
-| Rank | Model                              | AUPRC(test)  | AUPRC(leftout) | link to model  | link to code  | date  | authors  |
-|------|------------------------------------|--------------|----------------|----------------|---------------|---------------|---------------|
-| 1    | Pairwise encoding with conservation (+2 channels)  | 85.93         | 82.26           | [model](https://drive.google.com/drive/folders/17pGBXqX7aoH_KyyoulRa3zFegzRB2P2q?usp=drive_link) | [code](https://github.com/BioGeMT/miRBind_2.0/tree/dimos/conservation_channels/code/pairwise_cnn_conservation) | 27/03/2025 | Dimos, David, Panos |
-| 2    | Pairwise encoding CNN              | 84.97        | 83.08          | [model](https://drive.google.com/drive/folders/1dFsm0CcC7WL2mP4h5a6UZtVt57ICH3vB?usp=drive_link) | [code](https://github.com/BioGeMT/miRBind_2.0/tree/david/CNN_pairwise_encoding/analysis/pairwise_encoding) | 19/03/2025 | David, Panos |
-| 3    | retrained miRBind CNN (published in miRBench)  | 84.00        | 81.00          | LINK | LINK | 19/03/2025 | Eva? |
-| 4    | TargetScanCNN                      | 77.00        | 76.00          | LINK | LINK | 19/03/2025 | TargetScan |
-| 5    | ...                                | 00.0         | 00.0           | LINK | LINK | DATE | AUTHOR |
-| 6    | ...                                | 00.0         | 00.0           | LINK | LINK | DATE | AUTHOR |
-| 7    | ...                                | 00.0         | 00.0           | LINK | LINK | DATE | AUTHOR |
-| 8    | ...                                | 00.0         | 00.0           | LINK | LINK | DATE | AUTHOR |
-| 9    | ...                                | 00.0         | 00.0           | LINK | LINK | DATE | AUTHOR |
+### 2. Run inference
 
-#### How to add your model
+```bash
+cd code/pairwise_binding_site_model
 
-1. Push your code to reproduce and evaluate the model to GitHub
-2. Create a new folder for your trained model in [Google Drive](https://drive.google.com/drive/folders/1IH7_CjxWW7Q0dKEFJY3L3yo4B2WWxJh2?usp=drive_link) and upload it
-3. Fill in the table with metrics and links to the model and code (the path to the folder containing the code and guidelines to run it is sufficient)
+python -m inference.predict \
+    --model_path ../../models/pairwise_onehot_model_20260105_200141.pt \
+    --input_file path/to/your_sites.tsv \
+    --output_file predictions.tsv \
+    --model_type pairwise_onehot \
+    --batch_size 32
+```
+
+The output TSV is your input plus two columns:
+
+- `prediction_score` — binding probability in [0, 1]
+- `predicted_class` — 1 if `prediction_score > 0.5`, else 0
+
+There is also a ready-to-edit wrapper script at [analysis/pairwise_binding_site_model/inference.sh](analysis/pairwise_binding_site_model/inference.sh).
+
+## Quick start: predicting gene-level repression
+
+See [analysis/gene_level_model/README.md](analysis/gene_level_model/README.md) for the full walkthrough. Briefly:
+
+```bash
+# install gene-level model dependencies
+pip install -r analysis/gene_level_model/requirements.txt
+
+# download the training/eval data
+bash analysis/gene_level_model/download_data.sh
+
+# evaluate on a test set (or train your own — see analysis/gene_level_model/train.sh)
+bash analysis/gene_level_model/evaluate.sh
+```
+
+The gene-level model takes a full 3'UTR sequence (up to several thousand nt) and a miRNA sequence and predicts a scalar fold change.
+
+## Explainability
+
+The binding-site model supports SHAP-based attribution (via Captum's GradientShap). See [code/pairwise_binding_site_model/README.md](code/pairwise_binding_site_model/README.md) for the SHAP, clustering, and aggregation pipelines.
+
+## Downloading the public datasets
+
+To reproduce the published results or train from scratch:
+
+```bash
+bash data/scripts/run_zenodo_downloader.sh
+```
+
+This pulls the AGO2 eCLIP Manakov 2022 train / test / leftout splits from Zenodo into [data/chimeric_datasets/](data/chimeric_datasets/).
+
+## Repository layout
+
+- [code/](code/) — model definitions, encoders, training and inference scripts.
+- [analysis/](analysis/) — runnable wrapper scripts (`train.sh`, `inference.sh`, etc.) for each model.
+- [data/](data/) — placeholder; populated by the download scripts above.
+- [models/](models/) — trained model checkpoints.
+
+## Models leaderboard
+
+We track model performance on the Manakov22 test and leftout datasets, ranked by Average Precision score (AP) `AP(test) + AP(leftout)`.
+
+| Rank | Model | AP(test) | AP(leftout) | Model | Code | Date | Authors |
+|------|-------|-------------|----------------|-------|------|------|---------|
+| 1 | Pairwise encoding with conservation (+2 channels) | 85.93 | 82.26 | [model](https://drive.google.com/drive/folders/17pGBXqX7aoH_KyyoulRa3zFegzRB2P2q?usp=drive_link) | [code](https://github.com/BioGeMT/miRBind_2.0/tree/dimos/conservation_channels/code/pairwise_cnn_conservation) | 2025-03-27 | Dimos, David, Panos |
+| 2 | Pairwise encoding CNN | 84.97 | 83.08 | [model](https://drive.google.com/drive/folders/1dFsm0CcC7WL2mP4h5a6UZtVt57ICH3vB?usp=drive_link) | [code](https://github.com/BioGeMT/miRBind_2.0/tree/main/code/pairwise_binding_site_model) | 2025-03-19 | David, Panos |
+| 3 | Retrained miRBind CNN (miRBench) | 84.00 | 81.00 | — | — | 2025-03-19 | Eva |
+| 4 | TargetScanCNN | 77.00 | 76.00 | — | — | 2025-03-19 | TargetScan |
+
+## Citation
+
+If you use miRBind 2.0 in your work, please cite the corresponding manuscript: [miRBind2 enables sequence-only prediction of miRNA binding and transcript repression](https://www.biorxiv.org/content/10.64898/2026.03.19.712027v1).
