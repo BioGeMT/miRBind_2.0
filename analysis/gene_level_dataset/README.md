@@ -1,6 +1,6 @@
 # Reproducing the miRBind2-3UTR functional evaluation
 
-This directory contains the scripts used to build the 50,549-pair test set
+This directory contains the scripts used to build the test set
 described in the miRBind2 manuscript and to evaluate miRBind2-3UTR against
 the TargetScan 8.0 weighted context++ baseline.
 
@@ -13,7 +13,6 @@ Stage 1   build_test_set.py
 
 Stage 2   build_evaluation_subsets.py
           → eval_ens_ts_considered_all_mirs.tsv   (the manuscript's 50,549 pairs)
-          → 4 other subsets + stdout TargetScan baseline report
 
 [Inference]  miRBind2-3UTR (V4) checkpoint
           → test_results_gene_level_V4_pretrained/ts_considered_all_mirs/*.tsv
@@ -29,19 +28,17 @@ Stage 3   evaluate_test_set.py
 - `bash`, `curl`, `unzip`
 - `gdown` (the setup script installs it via pip if missing)
 
-## Step 0 — Download and lay out the inputs
-
-The Stage 1 inputs come from two sources:
-
-1. A Google Drive zip containing the UCSC and fold-change files:
-   <https://drive.google.com/file/d/1ZeRynCY0dz__hf2JeAHCxuCo4c8HOw6t/view?usp=sharing>
-2. The TargetScan 8.0 (vert_80) public download files.
-
-Both are fetched and placed into the expected directory layout by:
+## Step 0 — Download the input data
 
 ```bash
 bash setup_stage1_inputs.sh "https://drive.google.com/file/d/1ZeRynCY0dz__hf2JeAHCxuCo4c8HOw6t/view?usp=sharing"
 ```
+
+Sources:
+1. A Google Drive containing the UCSC and fold-change files:
+   <https://drive.google.com/file/d/1ZeRynCY0dz__hf2JeAHCxuCo4c8HOw6t/view?usp=sharing>
+2. The TargetScan 8.0 (vert_80) public download files.
+
 
 Layout:
 
@@ -95,7 +92,7 @@ bash run_build_evaluation_subsets.sh > eval_ens_ts_baseline.txt
 
 ## Step 3 — Run miRBind2-3UTR inference
 
-**Not included in this script group.** Take `eval_ens_ts_considered_all_mirs.tsv`,
+**Not included in this folder.** Take `eval_ens_ts_considered_all_mirs.tsv`,
 run the trained miRBind2-3UTR (V4) model on each (miRNA, UTR) pair, and write
 TSVs into `test_results_gene_level_V4_pretrained/ts_considered_all_mirs/` with
 columns:
