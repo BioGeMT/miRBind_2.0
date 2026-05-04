@@ -102,6 +102,9 @@ We track model performance on the Manakov22 test and leftout datasets, ranked by
 | 3 | Retrained miRBind CNN (miRBench) | 84.00 | 81.00 | — | — | 2025-03-19 | Eva |
 | 4 | TargetScanCNN | 77.00 | 76.00 | — | — | 2025-03-19 | TargetScan |
 
+## Transcript repression predictions
+[Transcript repression predictions stored on Google Drive](https://drive.google.com/drive/folders/1Wuw9aFpO5oNpHrW3Tna9DNC7H5LLqYc-?usp=sharing)  
+
 ## Citation
 
 If you use miRBind 2.0 in your work, please cite the corresponding manuscript: [miRBind2 enables sequence-only prediction of miRNA binding and transcript repression](https://www.biorxiv.org/content/10.64898/2026.03.19.712027v1).
